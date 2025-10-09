@@ -50,51 +50,39 @@ class ClothingClassificationModel:
         """
         print(f"🏗️  Building {self.model_name} model...")
         
-        # Input layer
+        # Input layer  
         inputs = layers.Input(shape=(*self.img_size, 3))
         
-        # Data augmentation layers (applied during training only)
-        augmentation = keras.Sequential([
-            layers.RandomFlip("horizontal"),
-            layers.RandomRotation(0.1),
-            layers.RandomZoom(0.1),
-            layers.RandomContrast(0.1),
-        ], name="augmentation")
-        
-        x = augmentation(inputs)
-        
-        # Preprocessing
+        # Get base model and preprocessing function
         if self.model_name == 'efficientnet':
-            preprocess = tf.keras.applications.efficientnet.preprocess_input
             base_model = EfficientNetB0(
                 include_top=False,
                 weights='imagenet' if self.use_pretrained else None,
-                input_shape=(*self.img_size, 3)
+                input_shape=(*self.img_size, 3),
+                pooling=None
             )
         elif self.model_name == 'mobilenet':
-            preprocess = tf.keras.applications.mobilenet_v2.preprocess_input
             base_model = MobileNetV2(
                 include_top=False,
                 weights='imagenet' if self.use_pretrained else None,
-                input_shape=(*self.img_size, 3)
+                input_shape=(*self.img_size, 3),
+                pooling=None
             )
         elif self.model_name == 'resnet':
-            preprocess = tf.keras.applications.resnet50.preprocess_input
             base_model = ResNet50(
                 include_top=False,
                 weights='imagenet' if self.use_pretrained else None,
-                input_shape=(*self.img_size, 3)
+                input_shape=(*self.img_size, 3),
+                pooling=None
             )
         else:
             raise ValueError(f"Unknown model: {self.model_name}")
-        
-        x = preprocess(x)
         
         # Freeze base model initially
         base_model.trainable = False
         
         # Add base model
-        x = base_model(x, training=False)
+        x = base_model(inputs, training=False)
         
         # Global pooling
         x = layers.GlobalAveragePooling2D()(x)

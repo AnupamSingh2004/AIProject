@@ -46,12 +46,13 @@ class OutfitCompatibilityModel:
         base_model = tf.keras.applications.MobileNetV2(
             include_top=False,
             weights='imagenet',
-            input_shape=(*img_size, 3)
+            input_shape=(*img_size, 3),
+            pooling=None
         )
         base_model.trainable = False
         
-        x = tf.keras.applications.mobilenet_v2.preprocess_input(inputs)
-        x = base_model(x, training=False)
+        # Apply preprocessing and base model
+        x = base_model(inputs, training=False)
         x = layers.GlobalAveragePooling2D()(x)
         
         # Feature embedding
@@ -59,8 +60,8 @@ class OutfitCompatibilityModel:
         x = layers.Dropout(0.3)(x)
         features = layers.Dense(self.feature_dim, activation=None, name='features')(x)
         
-        # L2 normalize features
-        features = tf.nn.l2_normalize(features, axis=1)
+        # L2 normalize features using Keras layer
+        features = layers.Lambda(lambda x: keras.ops.normalize(x, axis=1))(features)
         
         model = keras.Model(inputs, features, name='feature_extractor')
         

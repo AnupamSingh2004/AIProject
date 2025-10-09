@@ -46,22 +46,42 @@ An intelligent fashion recommendation system that analyzes your skin tone and su
 - Python 3.10+
 - Conda (Miniconda or Anaconda)
 - Kaggle Account (optional, for dataset)
+- GPU (recommended but not required)
 
-### Step 1: Clone the Repository
+### Quick Start (Automated)
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/AnupamSingh2004/AIProject.git
+cd AIProject
+
+# 2. Run the quickstart script
+./quickstart.sh
+```
+
+The quickstart script provides an interactive menu for:
+- Downloading the dataset
+- Installing dependencies
+- Training models
+- Running the demo app
+
+### Manual Installation
+
+#### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/AnupamSingh2004/AIProject.git
 cd AIProject
 ```
 
-### Step 2: Create Conda Environment
+#### Step 2: Create Conda Environment
 
 ```bash
 conda create -n AI python=3.10 -y
 conda activate AI
 ```
 
-### Step 3: Install Dependencies
+#### Step 3: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -70,12 +90,20 @@ pip install -r requirements.txt
 Or install packages individually:
 
 ```bash
-pip install tensorflow opencv-python mediapipe Pillow scikit-image colorthief scikit-learn pandas matplotlib seaborn tqdm pyyaml requests streamlit
+pip install tensorflow opencv-python mediapipe Pillow scikit-image colorthief scikit-learn pandas matplotlib seaborn tqdm pyyaml requests streamlit kaggle python-dotenv
 ```
 
-### Step 4: Download Dataset (Optional)
+#### Step 4: Verify Setup
 
-If you want to use the Kaggle Fashion Product Images dataset:
+```bash
+python verify_setup.py
+```
+
+This will check that everything is properly configured.
+
+#### Step 5: Download Dataset
+
+**Option A: Using Kaggle API (Recommended)**
 
 1. Create a Kaggle account at https://www.kaggle.com
 2. Go to https://www.kaggle.com/settings/account
@@ -85,8 +113,43 @@ If you want to use the Kaggle Fashion Product Images dataset:
 
 ```bash
 chmod 600 ~/.kaggle/kaggle.json
-conda run -n AI python scripts/download_dataset.py
+python scripts/download_dataset.py
 ```
+
+**Option B: Manual Download**
+
+1. Download from: https://www.kaggle.com/datasets/paramaggarwal/fashion-product-images-dataset
+2. Extract to `data/raw/` directory
+
+#### Step 6: Preprocess Data
+
+```bash
+python scripts/preprocess_data.py --data_dir data/raw --output_dir data/processed --img_size 224
+```
+
+This creates train/val/test splits and prepares the data for training.
+
+#### Step 7: Train Models
+
+**Option A: Full Pipeline (Recommended)**
+
+```bash
+python train.py
+```
+
+This trains both models automatically.
+
+**Option B: Individual Models**
+
+```bash
+# Train clothing classifier only
+python models/clothing_classifier.py
+
+# Train outfit compatibility model only
+python models/outfit_compatibility_model.py
+```
+
+For detailed training instructions, see [TRAINING.md](TRAINING.md)
 
 ## 🎯 Quick Start
 

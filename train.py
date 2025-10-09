@@ -8,7 +8,7 @@ from pathlib import Path
 import argparse
 
 # Add paths
-project_root = Path(__file__).parent.parent
+project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root / 'scripts'))
 sys.path.insert(0, str(project_root / 'models'))
 
