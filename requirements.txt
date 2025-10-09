@@ -1,0 +1,46 @@
+# Core ML/DL Libraries
+tensorflow>=2.13.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Computer Vision
+opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+mediapipe>=0.10.0
+Pillow>=10.0.0
+scikit-image>=0.21.0
+
+# Image Processing & Color Analysis
+colorthief>=0.2.1
+colorama>=0.4.6
+webcolors>=24.6.0
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Face Detection & Analysis
+face-recognition>=1.3.0
+dlib>=19.24.0
+
+# Dataset & Model Tools
+kaggle>=1.5.16
+gdown>=4.7.1
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+
+# Web/API (for demo app)
+streamlit>=1.28.0
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
+python-dotenv>=1.0.0
+requests>=2.31.0
