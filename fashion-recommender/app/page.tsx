@@ -71,10 +71,10 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in">
+            <div className="flex-responsive justify-center animate-scale-in">
               <Link
                 href="/analyze"
-                className="btn-primary btn-lg inline-flex items-center gap-2 shadow-theme-lg hover:shadow-theme-xl"
+                className="btn btn-primary btn-responsive"
               >
                 <Camera className="h-5 w-5" />
                 <span>Analyze Your Style</span>
@@ -82,7 +82,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/recommendations"
-                className="btn-outline btn-lg inline-flex items-center gap-2 border-2"
+                className="btn btn-outline btn-responsive"
               >
                 <Sparkles className="h-5 w-5" />
                 <span>Get Recommendations</span>

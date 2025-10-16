@@ -106,21 +106,21 @@ export default function RecommendationsPage() {
       <div className="container-wide">
         {/* Header */}
         <div className="mb-12 animate-fade-in">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+          <div className="flex-responsive justify-between items-start sm:items-center mb-8">
             <div>
-              <h1 className="heading-primary text-foreground mb-3 flex items-center gap-4">
-                <Sparkles className="h-12 w-12 text-primary-600" />
-                Recommendations
+              <h1 className="text-responsive-md text-foreground mb-3 flex items-center gap-3 font-bold">
+                <Sparkles className="h-8 w-8 sm:h-12 sm:w-12 text-primary-600" />
+                <span>Recommendations</span>
               </h1>
-              <p className="text-xl text-muted">
+              <p className="text-responsive-xs text-muted">
                 Personalized outfits curated just for you
               </p>
             </div>
             <button
               onClick={refreshRecommendations}
-              className="btn-primary btn-lg flex items-center gap-3"
+              className="btn btn-primary btn-responsive flex items-center gap-3 justify-center"
             >
-              <RefreshCw className="h-6 w-6" />
+              <RefreshCw className="h-5 w-5" />
               <span>Refresh</span>
             </button>
           </div>
@@ -143,34 +143,34 @@ export default function RecommendationsPage() {
                   {mockRecommendations[0].explanation}
                 </p>
               </div>
-              <button className="px-6 py-3 bg-white text-purple-600 rounded-full font-semibold hover:bg-gray-100 transition-colors">
+              <button className="btn btn-outline btn-md">
                 View Details
               </button>
             </div>
           </div>
 
           {/* Filter Bar */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-responsive gap-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-900 rounded-xl hover:bg-gray-50 transition-colors"
+              className="btn btn-outline btn-responsive flex items-center gap-2 justify-center"
             >
-              <Filter className="h-5 w-5" />
+              <Filter className="h-4 w-4" />
               <span>Filters</span>
             </button>
 
-            <div className="flex-1 flex flex-wrap gap-2">
-              <span className="px-4 py-3 text-sm font-medium text-gray-700 flex items-center">
-                Quick Filters:
+            <div className="flex-1 flex flex-wrap gap-2 items-center min-w-0">
+              <span className="px-2 py-1 text-xs sm:text-sm font-medium text-muted hidden sm:flex items-center">
+                Quick:
               </span>
               {['Casual', 'Business', 'Formal'].map((occasion) => (
                 <button
                   key={occasion}
                   onClick={() => setSelectedOccasion(occasion)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`btn btn-sm ${
                     selectedOccasion === occasion
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                      ? 'btn-primary'
+                      : 'btn-secondary'
                   }`}
                 >
                   {occasion}
@@ -181,22 +181,22 @@ export default function RecommendationsPage() {
 
           {/* Expanded Filters */}
           {showFilters && (
-            <div className="mt-4 p-6 bg-white border rounded-xl shadow-md animate-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 outfit-card animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Occasion Filter */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label className="block text-lg font-semibold text-foreground mb-4">
                     Occasion
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {occasions.map((occasion) => (
                       <button
                         key={occasion}
                         onClick={() => setSelectedOccasion(occasion)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        className={`btn btn-md ${
                           selectedOccasion === occasion
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'btn-primary'
+                            : 'btn-secondary'
                         }`}
                       >
                         {occasion}
@@ -207,18 +207,18 @@ export default function RecommendationsPage() {
 
                 {/* Season Filter */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <label className="block text-lg font-semibold text-foreground mb-4">
                     Season
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {seasons.map((season) => (
                       <button
                         key={season.name}
                         onClick={() => setSelectedSeason(season.name)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+                        className={`btn btn-md flex items-center gap-2 ${
                           selectedSeason === season.name
-                            ? 'bg-pink-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'btn-secondary'
+                            : 'btn-outline'
                         }`}
                       >
                         {season.icon && <season.icon className="h-4 w-4" />}
@@ -234,52 +234,50 @@ export default function RecommendationsPage() {
 
         {/* Recommendations Grid */}
         {filteredRecommendations.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="h-10 w-10 text-gray-400" />
+          <div className="text-center py-24">
+            <div className="w-24 h-24 rounded-2xl bg-surface flex items-center justify-center mx-auto mb-6 shadow-theme-sm">
+              <Sparkles className="h-12 w-12 text-muted" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No recommendations found
-            </h3>
-            <p className="text-gray-600 mb-6">Try adjusting your filters</p>
+            <h3 className="text-2xl font-semibold text-foreground mb-3">No recommendations found</h3>
+            <p className="text-muted mb-8 text-lg">Try adjusting your filters</p>
             <button
               onClick={() => {
                 setSelectedOccasion('All');
                 setSelectedSeason('All');
               }}
-              className="px-6 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors"
+              className="btn btn-primary btn-lg"
             >
               Clear Filters
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+          <div className="grid-responsive animate-fade-in">
             {filteredRecommendations.map((rec) => (
               <div
                 key={rec.id}
-                className="bg-white border rounded-2xl shadow-md overflow-hidden card-hover"
+                className="outfit-card overflow-hidden group"
               >
                 {/* Score Badge */}
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-8 flex justify-center items-center gap-4">
+                  <div className="fashion-gradient p-8 flex justify-center items-center gap-4">
                     <div className="flex gap-3 text-5xl">
                       {rec.items.map((item, idx) => (
                         <span key={idx}>{item}</span>
                       ))}
                     </div>
                   </div>
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-green-500 text-white rounded-full text-sm font-bold">
+                  <div className="absolute top-4 right-4 px-3 py-2 bg-green-500 text-white rounded-full text-sm font-bold shadow-theme-md">
                     {rec.score}% Match
                   </div>
                   <button
                     onClick={() => toggleFavorite(rec.id)}
-                    className="absolute top-4 left-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                    className="btn btn-ghost btn-sm absolute top-4 left-4"
                   >
                     <Heart
                       className={`h-5 w-5 ${
                         favorites.includes(rec.id)
                           ? 'fill-red-500 text-red-500'
-                          : 'text-gray-600'
+                          : 'text-muted'
                       }`}
                     />
                   </button>
@@ -287,43 +285,43 @@ export default function RecommendationsPage() {
 
                 {/* Details */}
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{rec.title}</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-3">{rec.title}</h3>
                   
                   {/* Tags */}
-                  <div className="flex gap-2 mb-3">
-                    <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                  <div className="flex gap-3 mb-4">
+                    <span className="px-4 py-2 bg-primary-100 text-primary-700 dark:bg-primary-800 dark:text-primary-300 rounded-full text-sm font-medium">
                       {rec.occasion}
                     </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                    <span className="px-4 py-2 bg-secondary-100 text-secondary-700 dark:bg-secondary-800 dark:text-secondary-300 rounded-full text-sm font-medium">
                       {rec.season}
                     </span>
                   </div>
 
                   {/* Color Palette */}
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex gap-3 mb-4">
                     {rec.colors.map((color, idx) => (
                       <div
                         key={idx}
-                        className="w-8 h-8 rounded-full border-2 border-white shadow-md"
+                        className="w-8 h-8 rounded-full border-2 border-border shadow-theme-sm"
                         style={{ backgroundColor: color }}
                       ></div>
                     ))}
                   </div>
 
                   {/* Explanation */}
-                  <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                    <div className="flex items-start gap-2">
-                      <Info className="h-4 w-4 text-purple-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-gray-700">{rec.explanation}</p>
+                  <div className="p-4 bg-surface rounded-xl mb-6">
+                    <div className="flex items-start gap-3">
+                      <Info className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-muted leading-relaxed">{rec.explanation}</p>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                  <div className="flex gap-3">
+                    <button className="btn btn-primary btn-md flex-1">
                       Try It On
                     </button>
-                    <button className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    <button className="btn btn-ghost btn-md flex-1">
                       Save
                     </button>
                   </div>
@@ -334,14 +332,16 @@ export default function RecommendationsPage() {
         )}
 
         {/* Info Banner */}
-        <div className="mt-12 bg-blue-50 border border-blue-200 rounded-xl p-6">
-          <div className="flex items-start gap-3">
-            <Info className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="mt-12 outfit-card">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-primary-100 dark:bg-primary-800 rounded-xl">
+              <Info className="h-6 w-6 text-primary-600 dark:text-primary-300" />
+            </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">
+              <h3 className="font-semibold text-foreground mb-2 text-lg">
                 How are these recommendations generated?
               </h3>
-              <p className="text-sm text-blue-800">
+              <p className="text-muted leading-relaxed">
                 Our AI analyzes your skin tone, undertone, and personal style preferences to suggest
                 outfits that complement your natural coloring. We use advanced color theory and fashion
                 principles to ensure every recommendation looks great on you.

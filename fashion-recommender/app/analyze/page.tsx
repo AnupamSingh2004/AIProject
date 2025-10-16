@@ -57,30 +57,30 @@ export default function AnalyzePage() {
     <div className="min-h-screen section-alt py-20">
       <div className="container-wide">
         {/* Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h1 className="heading-primary mb-6 text-foreground">Analyze Your Skin Tone</h1>
-          <p className="text-xl text-muted max-w-2xl mx-auto leading-relaxed">
+        <div className="text-center mb-12 animate-fade-in">
+          <h1 className="text-responsive-md mb-4 text-foreground font-bold">Analyze Your Skin Tone</h1>
+          <p className="text-responsive-xs text-muted max-w-2xl mx-auto leading-relaxed">
             Upload a clear photo of your face and let our AI analyze your skin tone for personalized recommendations
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
           {/* Upload Section */}
-          <div className="outfit-card animate-fade-in">
-            <h2 className="heading-secondary mb-8 text-foreground">Upload Your Photo</h2>
+          <div className="card p-6 animate-fade-in">
+            <h2 className="text-responsive-sm mb-6 text-foreground font-semibold">Upload Your Photo</h2>
             
             {/* Guidelines */}
-            <div className="mb-8 p-6 fashion-glow rounded-xl">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-3">
-                <AlertCircle className="h-6 w-6 text-accent" />
-                Guidelines for Best Results
+            <div className="mb-6 p-4 fashion-glow rounded-lg">
+              <h3 className="font-medium text-foreground mb-3 flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-accent" />
+                <span className="text-sm sm:text-base">Guidelines for Best Results</span>
               </h3>
-              <ul className="text-muted space-y-2 ml-8">
-                <li>• Use natural lighting (near a window is ideal)</li>
-                <li>• Face should be clearly visible</li>
+              <ul className="text-muted space-y-1 text-xs sm:text-sm ml-6">
+                <li>• Use natural lighting</li>
+                <li>• Face clearly visible</li>
                 <li>• No filters or heavy makeup</li>
-                <li>• Look directly at the camera</li>
-                <li>• Neutral expression works best</li>
+                <li>• Look directly at camera</li>
+                <li>• Neutral expression</li>
               </ul>
             </div>
 
@@ -122,9 +122,9 @@ export default function AnalyzePage() {
                   />
                   <button
                     onClick={clearImage}
-                    className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                    className="btn btn-ghost btn-sm absolute top-4 right-4"
                   >
-                    <X className="h-5 w-5 text-gray-700" />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
 
@@ -132,7 +132,7 @@ export default function AnalyzePage() {
                 <button
                   onClick={handleAnalyze}
                   disabled={analyzing}
-                  className="btn-primary btn-lg w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                  className="btn btn-primary btn-lg w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {analyzing ? (
                     <>
@@ -149,7 +149,7 @@ export default function AnalyzePage() {
 
                 <button
                   onClick={clearImage}
-                  className="btn-outline btn-lg w-full"
+                  className="btn btn-outline btn-lg w-full"
                 >
                   Upload Different Photo
                 </button>
@@ -239,10 +239,10 @@ export default function AnalyzePage() {
 
                 {/* Action Buttons */}
                 <div className="pt-6 space-y-4">
-                  <button className="btn-primary btn-lg w-full">
+                  <button className="btn btn-primary btn-lg w-full">
                     View Recommended Outfits
                   </button>
-                  <button className="btn-secondary btn-lg w-full">
+                  <button className="btn btn-secondary btn-lg w-full">
                     Save to Profile
                   </button>
                 </div>

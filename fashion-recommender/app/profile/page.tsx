@@ -48,7 +48,7 @@ export default function ProfilePage() {
                   <div className="w-28 h-28 rounded-2xl fashion-gradient flex items-center justify-center text-white text-3xl font-bold mx-auto shadow-theme-lg">
                     {profile.name.split(' ').map((n) => n[0]).join('')}
                   </div>
-                  <button className="absolute bottom-0 right-0 p-3 btn-primary rounded-full shadow-theme-lg">
+                  <button className="btn btn-primary btn-sm absolute bottom-0 right-0">
                     <Camera className="h-4 w-4" />
                   </button>
                 </div>
@@ -62,10 +62,10 @@ export default function ProfilePage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl font-medium transition-all ${
+                    className={`btn btn-md w-full flex items-center gap-4 ${
                       activeTab === tab.id
-                        ? 'fashion-gradient text-white shadow-theme-md'
-                        : 'text-foreground hover:bg-surface-hover'
+                        ? 'btn-primary'
+                        : 'btn-ghost'
                     }`}
                   >
                     <tab.icon className="h-6 w-6" />
@@ -84,7 +84,7 @@ export default function ProfilePage() {
                 <div>
                   <div className="flex justify-between items-center mb-8">
                     <h2 className="heading-secondary text-foreground">Profile Information</h2>
-                    <button className="btn-primary btn-md flex items-center gap-2">
+                    <button className="btn btn-primary btn-md flex items-center gap-2">
                       <Edit2 className="h-5 w-5" />
                       <span>Edit</span>
                     </button>
@@ -141,7 +141,7 @@ export default function ProfilePage() {
                           </p>
                         </div>
                       </div>
-                      <button className="mt-4 text-purple-600 font-medium hover:text-purple-700 transition-colors">
+                      <button className="btn btn-ghost btn-sm mt-4">
                         Re-analyze Skin Tone →
                       </button>
                     </div>
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                         {profile.stylePreferences.map((style) => (
                           <span
                             key={style}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-full font-medium"
+                            className="btn btn-primary btn-sm"
                           >
                             {style}
                           </span>
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                           .map((style) => (
                             <button
                               key={style}
-                              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-purple-100 hover:text-purple-700 transition-colors font-medium"
+                              className="btn btn-secondary btn-sm"
                             >
                               {style}
                             </button>
@@ -229,7 +229,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <button className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+                    <button className="btn btn-primary btn-lg w-full flex items-center justify-center gap-2">
                       <Save className="h-5 w-5" />
                       <span>Save Preferences</span>
                     </button>
@@ -318,7 +318,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <button className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+                    <button className="btn btn-primary btn-lg w-full flex items-center justify-center gap-2">
                       <Save className="h-5 w-5" />
                       <span>Save Settings</span>
                     </button>

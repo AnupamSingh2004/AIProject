@@ -126,14 +126,14 @@ export default function MixMatchPage() {
             <div className="flex gap-4">
               <button
                 onClick={randomizeOutfit}
-                className="btn-primary btn-lg flex items-center gap-3"
+                className="btn btn-primary btn-lg flex items-center gap-3"
               >
                 <Shuffle className="h-6 w-6" />
                 <span>Randomize</span>
               </button>
               <button
                 onClick={clearAll}
-                className="btn-outline btn-lg"
+                className="btn btn-outline btn-lg"
               >
                 Clear All
               </button>
@@ -261,11 +261,11 @@ export default function MixMatchPage() {
 
               {/* Action Buttons */}
               <div className="space-y-4">
-                <button className="btn-primary btn-lg w-full flex items-center justify-center gap-3">
+                <button className="btn btn-primary btn-lg w-full flex items-center justify-center gap-3">
                   <Save className="h-6 w-6" />
                   <span>Save Outfit</span>
                 </button>
-                <button className="btn-outline btn-lg w-full flex items-center justify-center gap-3">
+                <button className="btn btn-outline btn-lg w-full flex items-center justify-center gap-3">
                   <Share2 className="h-6 w-6" />
                   <span>Share</span>
                 </button>
@@ -283,10 +283,10 @@ export default function MixMatchPage() {
                   <button
                     key={item.id}
                     onClick={() => selectItem('top', item)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`btn btn-md ${
                       selectedItems.top?.id === item.id
-                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-lg'
-                        : 'border-border hover:border-primary-300 hover:bg-surface-hover'
+                        ? 'btn-primary'
+                        : 'btn-outline'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
@@ -310,10 +310,10 @@ export default function MixMatchPage() {
                   <button
                     key={item.id}
                     onClick={() => selectItem('bottom', item)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`btn btn-md ${
                       selectedItems.bottom?.id === item.id
-                        ? 'border-secondary-600 bg-secondary-50 dark:bg-secondary-900/20 shadow-lg'
-                        : 'border-border hover:border-secondary-300 hover:bg-surface-hover'
+                        ? 'btn-secondary'
+                        : 'btn-outline'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
@@ -337,10 +337,10 @@ export default function MixMatchPage() {
                   <button
                     key={item.id}
                     onClick={() => selectItem('shoes', item)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`btn btn-md ${
                       selectedItems.shoes?.id === item.id
-                        ? 'border-accent bg-accent-50 dark:bg-accent-900/20 shadow-lg'
-                        : 'border-border hover:border-accent-300 hover:bg-surface-hover'
+                        ? 'btn-accent'
+                        : 'btn-outline'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
@@ -364,10 +364,10 @@ export default function MixMatchPage() {
                   <button
                     key={item.id}
                     onClick={() => selectItem('accessory', item)}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`btn btn-md ${
                       selectedItems.accessory?.id === item.id
-                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-lg'
-                        : 'border-border hover:border-primary-300 hover:bg-surface-hover'
+                        ? 'btn-primary'
+                        : 'btn-outline'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
