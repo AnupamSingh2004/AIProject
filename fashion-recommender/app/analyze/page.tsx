@@ -54,28 +54,28 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 transition-colors duration-300">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen section-alt py-20">
+      <div className="container-wide">
         {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900">Analyze Your Skin Tone</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <div className="text-center mb-16 animate-fade-in">
+          <h1 className="heading-primary mb-6 text-foreground">Analyze Your Skin Tone</h1>
+          <p className="text-xl text-muted max-w-2xl mx-auto leading-relaxed">
             Upload a clear photo of your face and let our AI analyze your skin tone for personalized recommendations
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Upload Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 animate-fade-in border border-gray-100 transition-colors duration-300">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">Upload Your Photo</h2>
+          <div className="outfit-card animate-fade-in">
+            <h2 className="heading-secondary mb-8 text-foreground">Upload Your Photo</h2>
             
             {/* Guidelines */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
+            <div className="mb-8 p-6 fashion-glow rounded-xl">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-3">
+                <AlertCircle className="h-6 w-6 text-accent" />
                 Guidelines for Best Results
               </h3>
-              <ul className="text-sm text-blue-800 space-y-1 ml-7">
+              <ul className="text-muted space-y-2 ml-8">
                 <li>• Use natural lighting (near a window is ideal)</li>
                 <li>• Face should be clearly visible</li>
                 <li>• No filters or heavy makeup</li>
@@ -88,7 +88,7 @@ export default function AnalyzePage() {
             {!selectedImage ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-purple-300 rounded-xl p-12 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-all"
+                className="border-2 border-dashed border-primary-300 rounded-2xl p-12 text-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all group"
               >
                 <input
                   ref={fileInputRef}
@@ -97,15 +97,15 @@ export default function AnalyzePage() {
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center">
-                    <Upload className="h-8 w-8 text-purple-600" />
+                <div className="flex flex-col items-center gap-6">
+                  <div className="w-20 h-20 rounded-2xl fashion-gradient flex items-center justify-center shadow-theme-md group-hover:scale-110 transition-transform">
+                    <Upload className="h-10 w-10 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 mb-1">
+                    <p className="font-semibold text-foreground mb-2 text-lg">
                       Click to upload or drag and drop
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-muted">
                       PNG, JPG, HEIC up to 10MB
                     </p>
                   </div>
@@ -132,16 +132,16 @@ export default function AnalyzePage() {
                 <button
                   onClick={handleAnalyze}
                   disabled={analyzing}
-                  className="w-full py-4 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="btn-primary btn-lg w-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
                   {analyzing ? (
                     <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-6 w-6 animate-spin" />
                       <span>Analyzing...</span>
                     </>
                   ) : (
                     <>
-                      <Camera className="h-5 w-5" />
+                      <Camera className="h-6 w-6" />
                       <span>Analyze Skin Tone</span>
                     </>
                   )}
@@ -149,7 +149,7 @@ export default function AnalyzePage() {
 
                 <button
                   onClick={clearImage}
-                  className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                  className="btn-outline btn-lg w-full"
                 >
                   Upload Different Photo
                 </button>
@@ -158,62 +158,62 @@ export default function AnalyzePage() {
           </div>
 
           {/* Results Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 animate-fade-in border border-gray-100 transition-colors duration-300">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">Analysis Results</h2>
+          <div className="outfit-card animate-fade-in">
+            <h2 className="heading-secondary mb-8 text-foreground">Analysis Results</h2>
 
             {!analysisResult ? (
-              <div className="flex flex-col items-center justify-center h-64 text-center">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                  <Camera className="h-10 w-10 text-gray-400" />
+              <div className="flex flex-col items-center justify-center h-80 text-center">
+                <div className="w-24 h-24 rounded-2xl bg-surface flex items-center justify-center mb-6 shadow-theme-sm">
+                  <Camera className="h-12 w-12 text-muted" />
                 </div>
-                <p className="text-gray-500">
+                <p className="text-muted text-lg">
                   Upload a photo and click analyze to see your results
                 </p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {/* Confidence Score */}
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <span className="font-semibold text-green-900">
+                <div className="p-6 bg-accent-50 dark:bg-accent-900/20 rounded-xl border border-accent-200 dark:border-accent-700">
+                  <div className="flex items-center gap-3 mb-3">
+                    <CheckCircle2 className="h-6 w-6 text-accent" />
+                    <span className="font-semibold text-foreground text-lg">
                       Analysis Complete
                     </span>
                   </div>
-                  <p className="text-sm text-green-800">
+                  <p className="text-muted">
                     Confidence: {analysisResult.confidence}%
                   </p>
                 </div>
 
                 {/* Skin Type */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
+                  <h3 className="font-semibold text-foreground mb-3 text-lg">
                     Skin Type (Fitzpatrick Scale)
                   </h3>
-                  <p className="text-lg text-purple-600 font-medium">
+                  <p className="text-xl text-primary-600 font-medium">
                     {analysisResult.skinType}
                   </p>
                 </div>
 
                 {/* Undertone */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Undertone</h3>
-                  <p className="text-lg text-pink-600 font-medium">
+                  <h3 className="font-semibold text-foreground mb-3 text-lg">Undertone</h3>
+                  <p className="text-xl text-secondary-600 font-medium">
                     {analysisResult.undertone}
                   </p>
                 </div>
 
                 {/* Dominant Color */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
+                  <h3 className="font-semibold text-foreground mb-4 text-lg">
                     Dominant Skin Color
                   </h3>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <div
-                      className="w-16 h-16 rounded-lg border-2 border-gray-300 shadow-md"
+                      className="w-20 h-20 rounded-xl border-2 border-border shadow-theme-md"
                       style={{ backgroundColor: analysisResult.dominantColor }}
                     ></div>
-                    <span className="font-mono text-sm text-gray-600">
+                    <span className="font-mono text-lg text-muted">
                       {analysisResult.dominantColor}
                     </span>
                   </div>
@@ -221,28 +221,28 @@ export default function AnalyzePage() {
 
                 {/* Recommendations */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">
+                  <h3 className="font-semibold text-foreground mb-4 text-lg">
                     Color Recommendations
                   </h3>
-                  <ul className="space-y-2">
+                  <ul className="space-y-3">
                     {analysisResult.recommendations.map((rec: string, index: number) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2 text-gray-700"
+                        className="flex items-start gap-3 text-foreground"
                       >
-                        <CheckCircle2 className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                        <span>{rec}</span>
+                        <CheckCircle2 className="h-6 w-6 text-primary-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-lg">{rec}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="pt-4 space-y-3">
-                  <button className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors">
+                <div className="pt-6 space-y-4">
+                  <button className="btn-primary btn-lg w-full">
                     View Recommended Outfits
                   </button>
-                  <button className="w-full py-3 bg-pink-600 text-white rounded-xl font-semibold hover:bg-pink-700 transition-colors">
+                  <button className="btn-secondary btn-lg w-full">
                     Save to Profile
                   </button>
                 </div>
@@ -252,22 +252,22 @@ export default function AnalyzePage() {
         </div>
 
         {/* Info Section */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-colors duration-300">
-            <h3 className="font-bold text-lg mb-2 text-gray-900">Privacy First</h3>
-            <p className="text-gray-600 text-sm">
+        <div className="mt-16 grid-responsive md:grid-cols-3">
+          <div className="outfit-card group">
+            <h3 className="font-bold text-xl mb-4 text-foreground">Privacy First</h3>
+            <p className="text-muted leading-relaxed">
               Your photos are analyzed securely and never shared or stored without your permission.
             </p>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-colors duration-300">
-            <h3 className="font-bold text-lg mb-2 text-gray-900">AI-Powered</h3>
-            <p className="text-gray-600 text-sm">
+          <div className="outfit-card group">
+            <h3 className="font-bold text-xl mb-4 text-foreground">AI-Powered</h3>
+            <p className="text-muted leading-relaxed">
               Our advanced AI uses computer vision and color theory to provide accurate skin tone analysis.
             </p>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 transition-colors duration-300">
-            <h3 className="font-bold text-lg mb-2 text-gray-900">Personalized</h3>
-            <p className="text-gray-600 text-sm">
+          <div className="outfit-card group">
+            <h3 className="font-bold text-xl mb-4 text-foreground">Personalized</h3>
+            <p className="text-muted leading-relaxed">
               Get recommendations tailored specifically to your unique skin tone and undertone.
             </p>
           </div>

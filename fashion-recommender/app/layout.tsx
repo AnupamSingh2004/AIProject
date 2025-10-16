@@ -1,23 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import ClientHeader from "@/components/ClientHeader";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-sans'
+})
 
 export const metadata: Metadata = {
   title: "StyleAI - Your AI Fashion Companion",
-  description: "Get personalized fashion recommendations based on your skin tone and style preferences",
-};
+  description: "Get personalized fashion recommendations, wardrobe management, and style analysis powered by AI",
+  keywords: ['fashion', 'AI', 'style', 'wardrobe', 'recommendations', 'outfit', 'color analysis'],
+  authors: [{ name: 'StyleAI Team' }],
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export default function RootLayout({
   children,
@@ -25,17 +28,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
-      >
-        <div className="flex flex-col min-h-screen">
-          <ClientHeader />
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col antialiased light">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = localStorage.getItem('fashion-theme') || 'light';
+                document.documentElement.className = theme + ' ' + document.documentElement.className;
+              })();
+            `,
+          }}
+        />
+        <ThemeProvider defaultTheme="light" storageKey="fashion-theme">
+          <Header />
           <main className="flex-1">
             {children}
           </main>
           <Footer />
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,9 +1,58 @@
-import Link from 'next/link';
-import { Heart, Github, Twitter, Instagram } from 'lucide-react';
+import Link from 'next/link'
+import { Sparkles, Instagram, Twitter, Facebook, Mail, Heart, Github } from 'lucide-react'
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear()
+
+  const footerSections = [
+    {
+      title: 'Fashion AI',
+      links: [
+        { href: '/analyze', label: 'Style Analysis' },
+        { href: '/wardrobe', label: 'Wardrobe Manager' },
+        { href: '/recommendations', label: 'AI Recommendations' },
+        { href: '/mix-match', label: 'Mix & Match' },
+      ],
+    },
+    {
+      title: 'Features',
+      links: [
+        { href: '/color-analysis', label: 'Color Analysis' },
+        { href: '/body-type', label: 'Body Type Guide' },
+        { href: '/trends', label: 'Fashion Trends' },
+        { href: '/seasonal', label: 'Seasonal Colors' },
+      ],
+    },
+    {
+      title: 'Community',
+      links: [
+        { href: '/blog', label: 'Fashion Blog' },
+        { href: '/stylists', label: 'Expert Stylists' },
+        { href: '/inspiration', label: 'Style Inspiration' },
+        { href: '/challenges', label: 'Style Challenges' },
+      ],
+    },
+    {
+      title: 'Support',
+      links: [
+        { href: '/help', label: 'Help Center' },
+        { href: '/contact', label: 'Contact Us' },
+        { href: '/faq', label: 'FAQ' },
+        { href: '/feedback', label: 'Send Feedback' },
+      ],
+    },
+  ]
+
+  const socialLinks = [
+    { href: 'https://instagram.com', label: 'Instagram', icon: Instagram },
+    { href: 'https://twitter.com', label: 'Twitter', icon: Twitter },
+    { href: 'https://facebook.com', label: 'Facebook', icon: Facebook },
+    { href: 'https://github.com', label: 'GitHub', icon: Github },
+    { href: 'mailto:hello@styleai.com', label: 'Email', icon: Mail },
+  ]
+
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 mt-20 transition-colors duration-300">
+    <footer className="border-t border-border bg-surface transition-theme">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand Section */}

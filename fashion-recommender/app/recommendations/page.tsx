@@ -102,32 +102,32 @@ export default function RecommendationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen section-alt py-12">
+      <div className="container-wide">
         {/* Header */}
-        <div className="mb-8 animate-fade-in">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="mb-12 animate-fade-in">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                <Sparkles className="h-10 w-10 text-purple-600" />
+              <h1 className="heading-primary text-foreground mb-3 flex items-center gap-4">
+                <Sparkles className="h-12 w-12 text-primary-600" />
                 Recommendations
               </h1>
-              <p className="text-gray-600">
+              <p className="text-xl text-muted">
                 Personalized outfits curated just for you
               </p>
             </div>
             <button
               onClick={refreshRecommendations}
-              className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors shadow-lg"
+              className="btn-primary btn-lg flex items-center gap-3"
             >
-              <RefreshCw className="h-5 w-5" />
+              <RefreshCw className="h-6 w-6" />
               <span>Refresh</span>
             </button>
           </div>
 
           {/* Today's Pick Banner */}
-          <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-600 rounded-2xl p-8 text-white mb-6">
-            <h2 className="text-2xl font-bold mb-2">Today's Featured Outfit</h2>
+          <div className="fashion-gradient rounded-2xl p-10 text-white mb-8 shadow-theme-lg">
+            <h2 className="text-3xl font-bold mb-3">Today's Featured Outfit</h2>
             <p className="text-white/90 mb-4">Based on your preferences and the season</p>
             <div className="flex items-center gap-6">
               <div className="flex gap-4 text-6xl">

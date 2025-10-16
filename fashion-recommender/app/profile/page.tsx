@@ -30,45 +30,45 @@ export default function ProfilePage() {
   const styleCategories = ['Casual', 'Business', 'Formal', 'Athletic', 'Bohemian', 'Minimalist', 'Vintage', 'Trendy'];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen section-alt py-12">
+      <div className="container-wide">
         {/* Header */}
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Profile</h1>
-          <p className="text-gray-600">Manage your account and preferences</p>
+        <div className="mb-12 animate-fade-in">
+          <h1 className="heading-primary text-foreground mb-3">My Profile</h1>
+          <p className="text-xl text-muted">Manage your account and preferences</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white border rounded-2xl shadow-md p-6 animate-fade-in">
+            <div className="outfit-card animate-fade-in">
               {/* Profile Picture */}
-              <div className="text-center mb-6">
+              <div className="text-center mb-8">
                 <div className="relative inline-block">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-3xl font-bold mx-auto">
+                  <div className="w-28 h-28 rounded-2xl fashion-gradient flex items-center justify-center text-white text-3xl font-bold mx-auto shadow-theme-lg">
                     {profile.name.split(' ').map((n) => n[0]).join('')}
                   </div>
-                  <button className="absolute bottom-0 right-0 p-2 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors">
+                  <button className="absolute bottom-0 right-0 p-3 btn-primary rounded-full shadow-theme-lg">
                     <Camera className="h-4 w-4" />
                   </button>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mt-4">{profile.name}</h2>
-                <p className="text-gray-600 text-sm">{profile.email}</p>
+                <h2 className="text-2xl font-bold text-foreground mt-6">{profile.name}</h2>
+                <p className="text-muted">{profile.email}</p>
               </div>
 
               {/* Navigation Tabs */}
-              <nav className="space-y-2">
+              <nav className="space-y-3">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+                    className={`w-full flex items-center gap-4 px-6 py-4 rounded-xl font-medium transition-all ${
                       activeTab === tab.id
-                        ? 'bg-purple-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'fashion-gradient text-white shadow-theme-md'
+                        : 'text-foreground hover:bg-surface-hover'
                     }`}
                   >
-                    <tab.icon className="h-5 w-5" />
+                    <tab.icon className="h-6 w-6" />
                     <span>{tab.name}</span>
                   </button>
                 ))}
@@ -78,55 +78,55 @@ export default function ProfilePage() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="bg-white border rounded-2xl shadow-md p-8 animate-fade-in">
+            <div className="outfit-card animate-fade-in">
               {/* Profile Tab */}
               {activeTab === 'profile' && (
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                      <Edit2 className="h-4 w-4" />
+                  <div className="flex justify-between items-center mb-8">
+                    <h2 className="heading-secondary text-foreground">Profile Information</h2>
+                    <button className="btn-primary btn-md flex items-center gap-2">
+                      <Edit2 className="h-5 w-5" />
                       <span>Edit</span>
                     </button>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     {/* Name */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-lg font-semibold text-foreground mb-3">
                         Full Name
                       </label>
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                        <User className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-900">{profile.name}</span>
+                      <div className="flex items-center gap-4 p-5 bg-surface rounded-xl border border-border">
+                        <User className="h-6 w-6 text-muted" />
+                        <span className="text-foreground text-lg">{profile.name}</span>
                       </div>
                     </div>
 
                     {/* Email */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-lg font-semibold text-foreground mb-3">
                         Email Address
                       </label>
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                        <Mail className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-900">{profile.email}</span>
+                      <div className="flex items-center gap-4 p-5 bg-surface rounded-xl border border-border">
+                        <Mail className="h-6 w-6 text-muted" />
+                        <span className="text-foreground text-lg">{profile.email}</span>
                       </div>
                     </div>
 
                     {/* Location */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-lg font-semibold text-foreground mb-3">
                         Location
                       </label>
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                        <MapPin className="h-5 w-5 text-gray-400" />
-                        <span className="text-gray-900">{profile.location}</span>
+                      <div className="flex items-center gap-4 p-5 bg-surface rounded-xl border border-border">
+                        <MapPin className="h-6 w-6 text-muted" />
+                        <span className="text-foreground text-lg">{profile.location}</span>
                       </div>
                     </div>
 
                     {/* Skin Analysis Results */}
-                    <div className="border-t border-gray-200 pt-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4">Skin Analysis</h3>
+                    <div className="border-t border-border pt-8">
+                      <h3 className="text-2xl font-bold text-foreground mb-6">Skin Analysis</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-4 bg-purple-50 rounded-lg">
                           <p className="text-sm text-gray-600 mb-1">Skin Type</p>
@@ -152,12 +152,12 @@ export default function ProfilePage() {
               {/* Style Preferences Tab */}
               {activeTab === 'preferences' && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Style Preferences</h2>
+                  <h2 className="heading-secondary text-foreground mb-8">Style Preferences</h2>
 
-                  <div className="space-y-6">
+                  <div className="space-y-8">
                     {/* Current Preferences */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      <label className="block text-lg font-semibold text-foreground mb-4">
                         Your Style Categories
                       </label>
                       <div className="flex flex-wrap gap-2 mb-4">

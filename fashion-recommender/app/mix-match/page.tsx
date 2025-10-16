@@ -112,28 +112,28 @@ export default function MixMatchPage() {
   const compatibilityColor = getCompatibilityColor(compatibility);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen section-alt py-12">
+      <div className="container-wide">
         {/* Header */}
-        <div className="mb-8 animate-fade-in">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="mb-12 animate-fade-in">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Mix & Match</h1>
-              <p className="text-gray-600">
+              <h1 className="heading-primary text-foreground mb-3">Mix & Match</h1>
+              <p className="text-xl text-muted">
                 Create and test outfit combinations from your wardrobe
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={randomizeOutfit}
-                className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition-colors shadow-lg"
+                className="btn-primary btn-lg flex items-center gap-3"
               >
-                <Shuffle className="h-5 w-5" />
+                <Shuffle className="h-6 w-6" />
                 <span>Randomize</span>
               </button>
               <button
                 onClick={clearAll}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-300 transition-colors"
+                className="btn-outline btn-lg"
               >
                 Clear All
               </button>
@@ -144,44 +144,44 @@ export default function MixMatchPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Outfit Preview */}
           <div className="lg:col-span-1">
-            <div className="bg-white border rounded-2xl shadow-lg p-8 sticky top-24 animate-fade-in">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Your Outfit</h2>
+            <div className="outfit-card sticky top-24 animate-fade-in">
+              <h2 className="heading-secondary text-foreground mb-8 text-center">Your Outfit</h2>
 
               {/* Outfit Display */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-8 mb-6 min-h-[300px] flex flex-col items-center justify-center gap-4">
+              <div className="fashion-glow rounded-2xl p-10 mb-8 min-h-[400px] flex flex-col items-center justify-center gap-6">
                 {selectedItems.top && (
-                  <div className="text-6xl">{selectedItems.top.icon}</div>
+                  <div className="text-7xl animate-scale-in">{selectedItems.top.icon}</div>
                 )}
                 {selectedItems.bottom && (
-                  <div className="text-6xl">{selectedItems.bottom.icon}</div>
+                  <div className="text-7xl animate-scale-in">{selectedItems.bottom.icon}</div>
                 )}
                 {selectedItems.shoes && (
-                  <div className="text-5xl">{selectedItems.shoes.icon}</div>
+                  <div className="text-6xl animate-scale-in">{selectedItems.shoes.icon}</div>
                 )}
                 {selectedItems.accessory && (
-                  <div className="text-4xl">{selectedItems.accessory.icon}</div>
+                  <div className="text-5xl animate-scale-in">{selectedItems.accessory.icon}</div>
                 )}
                 
                 {!selectedItems.top && !selectedItems.bottom && !selectedItems.shoes && !selectedItems.accessory && (
-                  <p className="text-gray-400 text-center">
+                  <p className="text-muted text-center text-lg leading-relaxed">
                     Select items from your wardrobe to create an outfit
                   </p>
                 )}
               </div>
 
               {/* Compatibility Score */}
-              <div className={`p-6 rounded-xl mb-6 ${
-                compatibilityColor === 'green' ? 'bg-green-50 border-2 border-green-200' :
-                compatibilityColor === 'yellow' ? 'bg-yellow-50 border-2 border-yellow-200' :
-                compatibilityColor === 'red' ? 'bg-red-50 border-2 border-red-200' :
-                'bg-gray-50 border-2 border-gray-200'
+              <div className={`p-8 rounded-2xl mb-8 border-2 transition-all ${
+                compatibilityColor === 'green' ? 'bg-accent-50 dark:bg-accent-900/20 border-accent-300 dark:border-accent-700' :
+                compatibilityColor === 'yellow' ? 'bg-secondary-50 dark:bg-secondary-900/20 border-secondary-300 dark:border-secondary-700' :
+                compatibilityColor === 'red' ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700' :
+                'bg-surface border-border'
               }`}>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-gray-900">Compatibility Score</span>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-semibold text-foreground text-lg">Compatibility Score</span>
                   {compatibility && (
-                    <span className={`text-3xl font-bold ${
-                      compatibilityColor === 'green' ? 'text-green-600' :
-                      compatibilityColor === 'yellow' ? 'text-yellow-600' :
+                    <span className={`text-4xl font-bold ${
+                      compatibilityColor === 'green' ? 'text-accent' :
+                      compatibilityColor === 'yellow' ? 'text-secondary-600' :
                       'text-red-600'
                     }`}>
                       {compatibility}%
@@ -190,12 +190,12 @@ export default function MixMatchPage() {
                 </div>
                 
                 {compatibility && (
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+                  <div className="h-3 bg-surface rounded-full overflow-hidden mb-4">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        compatibilityColor === 'green' ? 'bg-green-500' :
-                        compatibilityColor === 'yellow' ? 'bg-yellow-500' :
-                        'bg-red-500'
+                        compatibilityColor === 'green' ? 'bg-accent' :
+                        compatibilityColor === 'yellow' ? 'bg-secondary-600' :
+                        'bg-red-600'
                       }`}
                       style={{ width: `${compatibility}%` }}
                     ></div>
@@ -210,12 +210,12 @@ export default function MixMatchPage() {
                   ) : compatibility ? (
                     <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                   ) : (
-                    <Info className="h-5 w-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                    <Info className="h-6 w-6 text-muted flex-shrink-0 mt-0.5" />
                   )}
-                  <p className={`text-sm ${
-                    compatibilityColor === 'green' ? 'text-green-800' :
-                    compatibilityColor === 'yellow' ? 'text-yellow-800' :
-                    compatibility ? 'text-red-800' : 'text-gray-700'
+                  <p className={`text-lg ${
+                    compatibilityColor === 'green' ? 'text-accent dark:text-accent-300' :
+                    compatibilityColor === 'yellow' ? 'text-secondary-600 dark:text-secondary-400' :
+                    compatibility ? 'text-red-600 dark:text-red-400' : 'text-muted'
                   }`}>
                     {getCompatibilityMessage(compatibility)}
                   </p>
@@ -224,49 +224,49 @@ export default function MixMatchPage() {
 
               {/* Detailed Scores */}
               {compatibility && (
-                <div className="space-y-3 mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Breakdown</h3>
+                <div className="space-y-4 mb-8">
+                  <h3 className="font-semibold text-foreground mb-4 text-lg">Breakdown</h3>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Color Harmony</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-600 rounded-full" style={{ width: '85%' }}></div>
+                    <span className="text-muted">Color Harmony</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-28 h-3 bg-surface rounded-full overflow-hidden">
+                        <div className="h-full bg-primary-600 rounded-full" style={{ width: '85%' }}></div>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">85%</span>
+                      <span className="font-medium text-foreground">85%</span>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Style Match</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-pink-600 rounded-full" style={{ width: '78%' }}></div>
+                    <span className="text-muted">Style Match</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-28 h-3 bg-surface rounded-full overflow-hidden">
+                        <div className="h-full bg-secondary-600 rounded-full" style={{ width: '78%' }}></div>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">78%</span>
+                      <span className="font-medium text-foreground">78%</span>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Occasion Fit</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-600 rounded-full" style={{ width: '90%' }}></div>
+                    <span className="text-muted">Occasion Fit</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-28 h-3 bg-surface rounded-full overflow-hidden">
+                        <div className="h-full bg-accent rounded-full" style={{ width: '90%' }}></div>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">90%</span>
+                      <span className="font-medium text-foreground">90%</span>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="space-y-3">
-                <button className="w-full py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
-                  <Save className="h-5 w-5" />
+              <div className="space-y-4">
+                <button className="btn-primary btn-lg w-full flex items-center justify-center gap-3">
+                  <Save className="h-6 w-6" />
                   <span>Save Outfit</span>
                 </button>
-                <button className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
-                  <Share2 className="h-5 w-5" />
+                <button className="btn-outline btn-lg w-full flex items-center justify-center gap-3">
+                  <Share2 className="h-6 w-6" />
                   <span>Share</span>
                 </button>
               </div>
@@ -274,10 +274,10 @@ export default function MixMatchPage() {
           </div>
 
           {/* Wardrobe Selection */}
-          <div className="lg:col-span-2 space-y-6 animate-fade-in">
+          <div className="lg:col-span-2 space-y-8 animate-fade-in">
             {/* Tops */}
-            <div className="bg-white border rounded-2xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Tops</h3>
+            <div className="outfit-card">
+              <h3 className="text-2xl font-bold text-foreground mb-6">Tops</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {wardrobeItems.tops.map((item) => (
                   <button
@@ -285,12 +285,12 @@ export default function MixMatchPage() {
                     onClick={() => selectItem('top', item)}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedItems.top?.id === item.id
-                        ? 'border-purple-600 bg-purple-50 shadow-lg'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-lg'
+                        : 'border-border hover:border-primary-300 hover:bg-surface-hover'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
-                    <p className="text-sm font-medium text-gray-900 text-center truncate">
+                    <p className="text-sm font-medium text-foreground text-center truncate">
                       {item.name}
                     </p>
                     <div
@@ -303,8 +303,8 @@ export default function MixMatchPage() {
             </div>
 
             {/* Bottoms */}
-            <div className="bg-white border rounded-2xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Bottoms</h3>
+            <div className="outfit-card">
+              <h3 className="text-2xl font-bold text-foreground mb-6">Bottoms</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {wardrobeItems.bottoms.map((item) => (
                   <button
@@ -312,12 +312,12 @@ export default function MixMatchPage() {
                     onClick={() => selectItem('bottom', item)}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedItems.bottom?.id === item.id
-                        ? 'border-purple-600 bg-purple-50 shadow-lg'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                        ? 'border-secondary-600 bg-secondary-50 dark:bg-secondary-900/20 shadow-lg'
+                        : 'border-border hover:border-secondary-300 hover:bg-surface-hover'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
-                    <p className="text-sm font-medium text-gray-900 text-center truncate">
+                    <p className="text-sm font-medium text-foreground text-center truncate">
                       {item.name}
                     </p>
                     <div
@@ -330,8 +330,8 @@ export default function MixMatchPage() {
             </div>
 
             {/* Shoes */}
-            <div className="bg-white border rounded-2xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Shoes</h3>
+            <div className="outfit-card">
+              <h3 className="text-2xl font-bold text-foreground mb-6">Shoes</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {wardrobeItems.shoes.map((item) => (
                   <button
@@ -339,12 +339,12 @@ export default function MixMatchPage() {
                     onClick={() => selectItem('shoes', item)}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedItems.shoes?.id === item.id
-                        ? 'border-purple-600 bg-purple-50 shadow-lg'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                        ? 'border-accent bg-accent-50 dark:bg-accent-900/20 shadow-lg'
+                        : 'border-border hover:border-accent-300 hover:bg-surface-hover'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
-                    <p className="text-sm font-medium text-gray-900 text-center truncate">
+                    <p className="text-sm font-medium text-foreground text-center truncate">
                       {item.name}
                     </p>
                     <div
@@ -357,8 +357,8 @@ export default function MixMatchPage() {
             </div>
 
             {/* Accessories */}
-            <div className="bg-white border rounded-2xl shadow-md p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Accessories</h3>
+            <div className="outfit-card">
+              <h3 className="text-2xl font-bold text-foreground mb-6">Accessories</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {wardrobeItems.accessories.map((item) => (
                   <button
@@ -366,12 +366,12 @@ export default function MixMatchPage() {
                     onClick={() => selectItem('accessory', item)}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       selectedItems.accessory?.id === item.id
-                        ? 'border-purple-600 bg-purple-50 shadow-lg'
-                        : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                        ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-lg'
+                        : 'border-border hover:border-primary-300 hover:bg-surface-hover'
                     }`}
                   >
                     <div className="text-4xl mb-2 text-center">{item.icon}</div>
-                    <p className="text-sm font-medium text-gray-900 text-center truncate">
+                    <p className="text-sm font-medium text-foreground text-center truncate">
                       {item.name}
                     </p>
                     <div
