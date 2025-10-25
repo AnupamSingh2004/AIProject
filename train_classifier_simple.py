@@ -1,100 +1,108 @@
 #!/usr/bin/env python3
+"""Simple Clothing Classifier Training Script"""
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import pandas as pd
+import numpy as np
 import tensorflow as tf
 from pathlib import Path
 from datetime import datetime
 import json
 
-# Config
+# Paths
 ROOT = Path('/home/anupam/code/AIProject')
-PROC = ROOT / 'data' / 'processed'
-RAW = ROOT / 'data' / 'raw'
+DATA = ROOT / 'data'
+PROCESSED = DATA / 'processed'
+RAW = DATA / 'raw'
 MODELS = ROOT / 'models' / 'saved_models'
 MODELS.mkdir(parents=True, exist_ok=True)
 
-SIZE = 224
-BATCH = 32
-EP1 = 20
-EP2 = 20
+# Config
+IMG_SIZE = 224
+BATCH_SIZE = 32
+EPOCHS1 = 15
+EPOCHS2 = 15
 
-print("="*80)
-print("TRAINING CLOTHING CLASSIFIER")
-print("="*80)
+print("=" * 80)
+print("🚀 CLOTHING CLASSIFIER TRAINING")
+print("=" * 80)
 print(f"Started: {datetime.now()}")
+print(f"Data: {PROCESSED}")
+print(f"Models: {MODELS}")
+
+# Check GPU
+gpus = tf.config.list_physical_devices('GPU')
+print(f"\nGPU: {'Yes' if gpus else 'No (using CPU)'}")
 
 # Load data
-train_df = pd.read_csv(PROC / 'train.csv')
-val_df = pd.read_csv(PROC / 'val.csv')
-test_df = pd.read_csv(PROC / 'test.csv')
+print("\n📂 Loading data...")
+train_df = pd.read_csv(PROCESSED / 'train.csv')
+val_df = pd.read_csv(PROCESSED / 'val.csv')
+test_df = pd.read_csv(PROCESSED / 'test.csv')
 
-with open(PROC / 'label_mapping.json') as f:
+with open(PROCESSED / 'label_mapping.json') as f:
     labels = json.load(f)
 
-num_cls = len(labels)
-print(f"Train: {len(train_df):,}, Val: {len(val_df):,}, Test: {len(test_df):,}")
-print(f"Classes: {num_cls}")
+num_classes = len(labels)
+print(f"✅ Train: {len(train_df):,}")
+print(f"✅ Val: {len(val_df):,}")
+print(f"✅ Test: {len(test_df):,}")
+print(f"✅ Classes: {num_classes}")
 
-# Data pipeline
-def make_dataset(df, train=True):
-    def load(path, lbl):
+# Create dataset
+def make_dataset(df, training=True):
+    def load_img(path, label):
         img = tf.io.read_file(path)
-        img = tf.image.decode_jpeg(img, 3)
-        img = tf.image.resize(img, [SIZE, SIZE])
+        img = tf.image.decode_jpeg(img, channels=3)
+        img = tf.image.resize(img, [IMG_SIZE, IMG_SIZE])
         img = tf.cast(img, tf.float32) / 255.0
-        if train:
+        if training:
             img = tf.image.random_flip_left_right(img)
             img = tf.image.random_brightness(img, 0.2)
-            img = tf.image.random_contrast(img, 0.8, 1.2)
-        return img, lbl
+        return img, label
     
     paths = [str(RAW / 'images' / f"{r['id']}.jpg") for _, r in df.iterrows()]
-    lbls = df['category_label'].values
+    labels_list = df['category_label'].values
     
-    ds = tf.data.Dataset.from_tensor_slices((paths, lbls))
-    ds = ds.map(load, tf.data.AUTOTUNE)
-    if train:
+    ds = tf.data.Dataset.from_tensor_slices((paths, labels_list))
+    ds = ds.map(load_img, num_parallel_calls=tf.data.AUTOTUNE)
+    if training:
         ds = ds.shuffle(1000)
-    ds = ds.batch(BATCH).prefetch(tf.data.AUTOTUNE)
+    ds = ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
     return ds
 
-print("Creating datasets...")
+print("\n📊 Creating datasets...")
 train_ds = make_dataset(train_df, True)
 val_ds = make_dataset(val_df, False)
 test_ds = make_dataset(test_df, False)
-print("Done!")
 
-# Build custom CNN model  
-print("\nBuilding model...")
-from tensorflow.keras import layers, models, applications
+# Build model
+print("\n🏗️  Building model...")
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications import MobileNetV2
 
-# Use MobileNetV2 which works better with Keras 3
-base = applications.MobileNetV2(
-    input_shape=(SIZE, SIZE, 3),
-    include_top=False,
-    weights='imagenet'
-)
+base = MobileNetV2(weights='imagenet', include_top=False, 
+                   input_shape=(IMG_SIZE, IMG_SIZE, 3))
 base.trainable = False
 
 model = models.Sequential([
     base,
     layers.GlobalAveragePooling2D(),
-    layers.Dense(512, activation='relu'),
-    layers.BatchNormalization(),
-    layers.Dropout(0.5),
     layers.Dense(256, activation='relu'),
     layers.Dropout(0.3),
-    layers.Dense(num_cls, activation='softmax')
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.2),
+    layers.Dense(num_classes, activation='softmax')
 ])
 
-print(f"Model parameters: {model.count_params():,}")
+print(f"✅ Model: {model.count_params():,} params")
 
-# Phase 1 - Frozen base
-print("\n" + "="*80)
-print("PHASE 1: Training with frozen base (20 epochs)")
-print("="*80)
+# Phase 1
+print("\n" + "=" * 80)
+print("PHASE 1: Frozen base")
+print("=" * 80)
 
 model.compile(
     optimizer=tf.keras.optimizers.Adam(0.001),
@@ -104,49 +112,25 @@ model.compile(
 
 cb1 = [
     tf.keras.callbacks.ModelCheckpoint(
-        str(MODELS/'p1_best.keras'),
-        save_best_only=True,
-        monitor='val_accuracy',
-        mode='max',
-        verbose=1
+        str(MODELS / 'classifier_p1.keras'),
+        save_best_only=True, monitor='val_accuracy', mode='max'
     ),
     tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        patience=5,
-        restore_best_weights=True,
-        verbose=1
-    ),
-    tf.keras.callbacks.ReduceLROnPlateau(
-        monitor='val_loss',
-        factor=0.5,
-        patience=3,
-        min_lr=1e-7,
-        verbose=1
+        monitor='val_loss', patience=5, restore_best_weights=True
     )
 ]
 
-print("\nStarting training...\n")
-h1 = model.fit(
-    train_ds,
-    validation_data=val_ds,
-    epochs=EP1,
-    callbacks=cb1,
-    verbose=1
-)
+print("\n🚀 Training Phase 1...")
+h1 = model.fit(train_ds, validation_data=val_ds, epochs=EPOCHS1, callbacks=cb1)
 
-print("\n✓ Phase 1 complete!")
-
-# Phase 2 - Fine-tuning
-print("\n" + "="*80)
-print("PHASE 2: Fine-tuning (20 epochs)")
-print("="*80)
+# Phase 2
+print("\n" + "=" * 80)
+print("PHASE 2: Fine-tuning")
+print("=" * 80)
 
 base.trainable = True
-# Freeze first 100 layers, fine-tune rest
-for layer in base.layers[:100]:
+for layer in base.layers[:-20]:
     layer.trainable = False
-
-print(f"Unfroze {sum(1 for l in base.layers if l.trainable)} layers")
 
 model.compile(
     optimizer=tf.keras.optimizers.Adam(0.00001),
@@ -156,71 +140,41 @@ model.compile(
 
 cb2 = [
     tf.keras.callbacks.ModelCheckpoint(
-        str(MODELS/'p2_best.keras'),
-        save_best_only=True,
-        monitor='val_accuracy',
-        mode='max',
-        verbose=1
+        str(MODELS / 'classifier_final.keras'),
+        save_best_only=True, monitor='val_accuracy', mode='max'
     ),
     tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        patience=5,
-        restore_best_weights=True,
-        verbose=1
-    ),
-    tf.keras.callbacks.ReduceLROnPlateau(
-        monitor='val_loss',
-        factor=0.5,
-        patience=2,
-        min_lr=1e-8,
-        verbose=1
+        monitor='val_loss', patience=5, restore_best_weights=True
     )
 ]
 
-print("\nStarting fine-tuning...\n")
-h2 = model.fit(
-    train_ds,
-    validation_data=val_ds,
-    epochs=EP2,
-    callbacks=cb2,
-    verbose=1
-)
+print("\n🚀 Training Phase 2...")
+h2 = model.fit(train_ds, validation_data=val_ds, epochs=EPOCHS2, callbacks=cb2)
 
-print("\n✓ Phase 2 complete!")
+# Evaluate
+print("\n" + "=" * 80)
+print("EVALUATION")
+print("=" * 80)
 
-# Final evaluation
-print("\n" + "="*80)
-print("FINAL EVALUATION ON TEST SET")
-print("="*80)
+results = model.evaluate(test_ds, return_dict=True)
+print(f"\nTest Loss: {results['loss']:.4f}")
+print(f"Test Accuracy: {results['accuracy']*100:.2f}%")
 
-results = model.evaluate(test_ds, return_dict=True, verbose=1)
-print(f"\n✓ Test Accuracy: {results['accuracy']*100:.2f}%")
-print(f"✓ Test Loss: {results['loss']:.4f}")
-
-# Save final model
+# Save
 final_path = MODELS / 'clothing_classifier.keras'
 model.save(final_path)
-print(f"\n✓ Model saved: {final_path}")
+print(f"\n💾 Saved: {final_path}")
 
-# Save training history
+# Save history
 history = {
     'phase1': {k: [float(v) for v in h1.history[k]] for k in h1.history},
     'phase2': {k: [float(v) for v in h2.history[k]] for k in h2.history},
-    'test_results': {k: float(v) for k, v in results.items()}
+    'test': {k: float(v) for k, v in results.items()}
 }
-
-history_path = MODELS / 'training_history.json'
-with open(history_path, 'w') as f:
+with open(MODELS / 'history.json', 'w') as f:
     json.dump(history, f, indent=2)
 
-print(f"✓ History saved: {history_path}")
-
-print("\n" + "="*80)
-print("✓ TRAINING COMPLETE!")
-print("="*80)
+print("\n" + "=" * 80)
+print("🎉 TRAINING COMPLETE!")
+print("=" * 80)
 print(f"Finished: {datetime.now()}")
-print(f"\nSaved models:")
-print(f"  - {final_path}")
-print(f"  - {MODELS/'p1_best.keras'}")
-print(f"  - {MODELS/'p2_best.keras'}")
-print("\nNext: Train outfit compatibility model or test with Streamlit app")
