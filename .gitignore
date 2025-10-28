@@ -56,16 +56,17 @@ conda/
 .LSOverride
 
 # Model files (too large)
-models/saved_models/*.h5
-models/saved_models/*.keras
-models/saved_models/*.pb
-models/saved_models/*.ckpt
-models/saved_models/*.weights.h5
-*.h5
-*.keras
-*.pb
-*.tflite
-*.onnx
+# TEMPORARILY COMMENTED OUT TO ALLOW PUSHING MODELS
+# models/saved_models/*.h5
+# models/saved_models/*.keras
+# models/saved_models/*.pb
+# models/saved_models/*.ckpt
+# models/saved_models/*.weights.h5
+# *.h5
+# *.keras
+# *.pb
+# *.tflite
+# *.onnx
 
 # Logs and temp files
 logs/

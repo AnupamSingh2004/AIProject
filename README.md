@@ -18,16 +18,23 @@ An intelligent **deep learning-powered** fashion recommendation system that uses
    - **Training**: 2-phase (frozen base → fine-tuned), 31,093 training images
    - **GPU Accelerated**: Trains on NVIDIA RTX 3050 in ~20 minutes
 
-2. **👔 Advanced Outfit Compatibility Model**
-   - **Architecture**: 3-input Siamese CNN (2.7M parameters)
+2. **👔 Advanced Outfit Compatibility Model (78.28% Accuracy, 88.09% AUC)**
+   - **Architecture**: 3-input Siamese CNN (3.16M parameters)
    - **Inputs**: Top image + Bottom image + Shoes image (224x224x3 each)
    - **Output**: Compatibility score (0-1, sigmoid activation)
+   - **Performance Metrics** (Test Set):
+     - Accuracy: **78.28%**
+     - AUC-ROC: **88.09%**
+     - Precision: **83.20%**
+     - Recall: **70.87%**
+     - F1-Score: **76.54%**
    - **Features Considered**:
      - RGB color harmony (complementary, analogous, monochromatic)
-     - Pattern matching (solid, striped, checkered, floral, dotted)
+     - Pattern clash detection (striped+checkered penalty: -0.4)
      - Gender separation (Men's/Women's outfits)
-     - Style consistency (Casual, Formal, Sports, Party, Ethnic)
-   - **Training Strategy**: Balanced 50/50 positive/negative outfit sets
+     - Occasion matching (Casual, Formal, Sports, Party, Ethnic)
+   - **Training Strategy**: Balanced 50/50 positive/negative outfits, strict 70% threshold
+   - **Training Time**: ~13 minutes on RTX 3050 (35 epochs, early stopping)
 
 ### **Visual Feature Extraction**
 
@@ -164,11 +171,17 @@ This trains both models automatically.
 
 ```bash
 # Train clothing classifier only
-python models/clothing_classifier.py
+python train_classifier_simple.py
 
-# Train outfit compatibility model only
-python models/outfit_compatibility_model.py
+# Train advanced outfit compatibility model (3-input Siamese CNN)
+python train_compatibility_advanced.py
 ```
+
+**Training Output** (Compatibility Model):
+- Creates: `models/saved_models/outfit_compatibility_advanced.keras` (21 MB)
+- History: `models/saved_models/compatibility_advanced_history.json`
+- Training time: ~13 minutes on RTX 3050 GPU
+- Expected metrics: 78% accuracy, 88% AUC
 
 For detailed training instructions, see [TRAINING.md](TRAINING.md)
 
@@ -642,13 +655,20 @@ pattern_compatibility(P1, P2):
 | Inference Time | ~50 ms/image |
 
 #### **Compatibility Model**
-| Metric | Target |
-|--------|--------|
-| Expected Test Accuracy | 70-85% |
-| Expected AUC | 0.80-0.90 |
-| Parameters | 2,791,361 |
-| Training Time | ~15 min (GPU, cached images) |
+| Metric | Value |
+|--------|-------|
+| **Test Accuracy** | **78.28%** ✅ |
+| **Test AUC-ROC** | **88.09%** ✅ |
+| **Precision** | **83.20%** |
+| **Recall** | **70.87%** |
+| **F1-Score** | **76.54%** |
+| Val Accuracy (Best) | 81.19% |
+| Val AUC (Best) | 91.16% |
+| Parameters | 3,165,697 |
+| Training Time | ~13 min (GPU, 35 epochs) |
+| Training Pairs | 8,000 (50/50 balanced) |
 | Inference Time | ~50 ms/outfit |
+| Early Stopping | Epoch 25 (patience 10) |
 
 #### **Visual Feature Extraction**
 | Operation | Time (per image) |
@@ -746,21 +766,31 @@ outfit = {
 
 ### **10. Training Loss & Accuracy Progression**
 
-**Expected Training Curve** (Compatibility Model):
+**Actual Training Results** (Compatibility Model):
 
 ```
-Epoch 1:  Loss: 0.65  |  Acc: 62%  |  Val_Loss: 0.61  |  Val_Acc: 65%
-Epoch 5:  Loss: 0.48  |  Acc: 74%  |  Val_Loss: 0.52  |  Val_Acc: 73%
-Epoch 10: Loss: 0.38  |  Acc: 81%  |  Val_Loss: 0.45  |  Val_Acc: 78%
-Epoch 15: Loss: 0.32  |  Acc: 85%  |  Val_Loss: 0.42  |  Val_Acc: 80%
-Epoch 20: Loss: 0.28  |  Acc: 87%  |  Val_Loss: 0.41  |  Val_Acc: 81%
+Epoch 1:  Loss: 17.73 |  Acc: 51.41% |  Val_Loss: 17.43 |  Val_Acc: 60.50% |  Val_AUC: 65.79%
+Epoch 5:  Loss: 16.23 |  Acc: 66.30% |  Val_Loss: 15.55 |  Val_Acc: 75.38% |  Val_AUC: 81.48%
+Epoch 10: Loss: 13.97 |  Acc: 73.59% |  Val_Loss: 13.37 |  Val_Acc: 76.88% |  Val_AUC: 87.41%
+Epoch 15: Loss: 10.84 |  Acc: 77.80% |  Val_Loss: 10.33 |  Val_Acc: 80.44% |  Val_AUC: 89.95%
+Epoch 20: Loss: 8.97  |  Acc: 79.94% |  Val_Loss: 8.53  |  Val_Acc: 80.87% |  Val_AUC: 90.49%
+Epoch 25: Loss: 6.60  |  Acc: 81.41% |  Val_Loss: 6.28  |  Val_Acc: 81.19% |  Val_AUC: 91.16% ⭐
+Epoch 35: Early stopping triggered (best model from epoch 25)
 ```
+
+**Final Test Performance**:
+- **Accuracy**: 78.28%
+- **AUC-ROC**: 88.09%
+- **Precision**: 83.20%
+- **Recall**: 70.87%
+- **F1-Score**: 76.54%
 
 **Preventing Overfitting**:
 - Dropout layers (0.2-0.4)
-- Early stopping (patience=7)
-- Balanced positive/negative samples
-- Data augmentation through shuffling
+- Early stopping (patience=10, triggered at epoch 35)
+- Balanced positive/negative samples (50/50)
+- Strict compatibility threshold (70% for positive outfits)
+- L2 regularization on MobileNetV2 features
 
 ---
 
@@ -774,6 +804,500 @@ Epoch 20: Loss: 0.28  |  Acc: 87%  |  Val_Loss: 0.41  |  Val_Acc: 81%
 | **Edge Ratio** | $r = \frac{\|E_h - E_v\|}{E_h + E_v + \epsilon}$ |
 | **Brightness** | $B = \frac{1}{3}(\text{mean}(C_1) + \text{mean}(C_2) + \text{mean}(C_3))$ |
 | **Outfit Score** | $S = 0.35 C_{\text{color}} + 0.35 C_{\text{pattern}} + 0.2 C_{\text{style}} + 0.1 C_{\text{brightness}}$ |
+
+---
+
+### **12. Complete Image Processing Flow (Detailed)**
+
+This section explains exactly what happens to an image from upload to final outfit recommendation, covering every transformation, model layer, and operation.
+
+#### **Step 1: Raw Image Upload**
+- **Input Format**: User uploads an image (JPEG/PNG) from phone camera or gallery
+- **Data Structure**: Image loaded as numpy array with shape `(H, W, 3)` where:
+  - `H` = height in pixels (variable, e.g., 3024 for phone photos)
+  - `W` = width in pixels (variable, e.g., 4032 for phone photos)
+  - `3` = RGB color channels (Red, Green, Blue)
+  - Data type: `uint8` (values 0-255)
+- **File Size**: Typically 2-8 MB for phone photos
+- **Color Space**: sRGB (standard RGB)
+
+#### **Step 2: Image Preprocessing**
+
+**2.1 Resize Operation**
+```python
+# OpenCV resize with bilinear interpolation
+img_resized = cv2.resize(img, (224, 224), interpolation=cv2.INTER_LINEAR)
+# Shape: (3024, 4032, 3) → (224, 224, 3)
+```
+- **Method**: Bilinear interpolation (weighted average of 4 nearest pixels)
+- **Output**: Fixed 224×224 size required by MobileNetV2 architecture
+- **Computation**: ~0.5ms on CPU
+
+**2.2 Normalization**
+```python
+# Convert pixel values from [0, 255] to [0.0, 1.0]
+img_normalized = img_resized.astype('float32') / 255.0
+# uint8 [0, 255] → float32 [0.0, 1.0]
+```
+- **Purpose**: Neural networks perform better with normalized inputs (0-1 range)
+- **Effect**: Black pixel (0, 0, 0) → (0.0, 0.0, 0.0), White pixel (255, 255, 255) → (1.0, 1.0, 1.0)
+
+**2.3 Color Space Handling**
+- **OpenCV Quirk**: cv2.imread() loads images in BGR order (Blue, Green, Red) instead of RGB
+- **Conversion**: `cv2.cvtColor(img, cv2.COLOR_BGR2RGB)` swaps channels
+- **Result**: Standard RGB format for model input
+
+#### **Step 3: Clothing Classification (MobileNetV2)**
+
+**3.1 Model Architecture Breakdown**
+
+The image passes through MobileNetV2, a highly efficient CNN designed for mobile devices:
+
+**Layer 1: Initial Convolution**
+```
+Input: (224, 224, 3) [RGB image]
+↓ Conv2D(32 filters, 3×3 kernel, stride=2, ReLU6 activation)
+Output: (112, 112, 32) [32 feature maps]
+```
+- **Operation**: Each 3×3 kernel slides over image, computing weighted sum of pixels
+- **Effect**: Detects basic edges and color gradients
+- **Reduction**: Spatial size halved (224→112) due to stride=2
+
+**Layer 2-17: Inverted Residual Blocks (Bottleneck Architecture)**
+
+Each block follows this pattern:
+```
+Input: (H, W, C) [C channels]
+↓ 1×1 Conv (Expand): Increase channels from C to 6C
+↓ Activation: ReLU6 (clips values at 6.0)
+↓ 3×3 Depthwise Conv: Apply separate filter per channel
+↓ Activation: ReLU6
+↓ 1×1 Conv (Project): Reduce channels back to C'
+↓ Skip Connection: Add input if C = C' (residual learning)
+Output: (H', W', C') [Compressed features]
+```
+
+**Key Blocks:**
+- **Block 1-3**: Extract low-level features (edges, textures) → (112, 112) → (56, 56)
+- **Block 4-7**: Mid-level features (patterns, shapes) → (56, 56) → (28, 28)
+- **Block 8-14**: High-level features (clothing types, styles) → (28, 28) → (14, 14)
+- **Block 15-17**: Abstract semantic features → (14, 14) → (7, 7)
+
+**Final Feature Extraction:**
+```
+Input: (7, 7, 1280) [1280 feature maps]
+↓ GlobalAveragePooling2D: Average each 7×7 feature map to single value
+Output: (1280,) [1D feature vector]
+↓ Dense(128, activation='relu', kernel_regularizer=L2(0.01))
+Output: (128,) [Compressed embedding]
+↓ BatchNormalization: Normalize activations (mean=0, std=1)
+↓ Dropout(0.5): Randomly set 50% of values to 0 (training only)
+```
+
+**3.2 Classification Head**
+```
+Input: (128,) [Image embedding]
+↓ Dense(6, activation='softmax')
+Output: (6,) [Probability distribution]
+```
+
+**Softmax Operation:**
+$$
+P(\text{class}_i) = \frac{e^{z_i}}{\sum_{j=1}^{6} e^{z_j}}
+$$
+
+**Output Example:**
+```python
+[0.78, 0.12, 0.05, 0.03, 0.01, 0.01]  # Probabilities sum to 1.0
+# Topwear: 78%, Bottomwear: 12%, Footwear: 5%, ...
+```
+
+**3.3 Predicted Category**
+- **Decision**: `argmax(probabilities)` → Index of highest probability
+- **Mapping**: `{0: 'Topwear', 1: 'Bottomwear', 2: 'Footwear', 3: 'Dress', 4: 'Accessories', 5: 'Other'}`
+- **Confidence Threshold**: Only accept if max probability > 0.6 (60%)
+- **Processing Time**: ~50ms on GPU, ~200ms on CPU
+
+#### **Step 4: Visual Feature Extraction**
+
+**4.1 Dominant Color Extraction (K-Means Clustering)**
+
+**Algorithm:**
+```python
+# Step 1: Reshape image from (224, 224, 3) to (50176, 3)
+pixels = img.reshape(-1, 3)  # Flatten spatial dimensions
+# Each row = one pixel's [R, G, B] values
+
+# Step 2: K-Means clustering (k=3)
+from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+kmeans.fit(pixels)
+# Finds 3 cluster centers that minimize within-cluster variance
+```
+
+**Mathematics:**
+$$
+\min_{C_1, C_2, C_3} \sum_{i=1}^{3} \sum_{p \in \text{cluster}_i} \|p - C_i\|^2
+$$
+where $C_i$ = cluster center (dominant color RGB), $p$ = pixel RGB value
+
+**Output:**
+```python
+colors = [
+    [180, 120, 85],   # Color 1 (dominant): Brown
+    [220, 200, 190],  # Color 2: Light beige
+    [50, 30, 20]      # Color 3 (least): Dark brown
+]
+percentages = [0.65, 0.25, 0.10]  # How much of image each color covers
+```
+
+**4.2 Pattern Detection**
+
+**Grayscale Conversion:**
+```python
+gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+# Formula: Gray = 0.299*R + 0.587*G + 0.114*B (weighted by human perception)
+```
+
+**Edge Detection (Canny Algorithm):**
+```python
+edges = cv2.Canny(gray, threshold1=50, threshold2=150)
+# Step 1: Gaussian blur to reduce noise
+# Step 2: Compute gradients (Sobel operators)
+# Step 3: Non-maximum suppression (thin edges)
+# Step 4: Double thresholding (weak/strong edges)
+# Step 5: Edge tracking by hysteresis
+```
+
+**Hough Line Transform (Detect Straight Lines):**
+```python
+lines = cv2.HoughLinesP(edges, rho=1, theta=np.pi/180, threshold=50, minLineLength=30)
+# Detects lines in polar coordinates (ρ, θ)
+# Returns list of line segments: [[x1, y1, x2, y2], ...]
+```
+
+**Directional Analysis:**
+```python
+for line in lines:
+    x1, y1, x2, y2 = line[0]
+    angle = np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi
+    if -15 < angle < 15:          # Horizontal
+        horizontal_count += 1
+    elif 75 < angle < 105:        # Vertical
+        vertical_count += 1
+
+# Decision logic:
+if horizontal_count > 10 and horizontal_count / total_lines > 0.6:
+    pattern = "striped_horizontal"
+elif vertical_count > 10 and vertical_count / total_lines > 0.6:
+    pattern = "striped_vertical"
+```
+
+**Blob Detection (Dotted Patterns):**
+```python
+params = cv2.SimpleBlobDetector_Params()
+params.filterByCircularity = True
+params.minCircularity = 0.7  # Dots are circular
+detector = cv2.SimpleBlobDetector_create(params)
+keypoints = detector.detect(edges)
+
+if len(keypoints) > 20:  # Many circular regions
+    pattern = "dotted"
+```
+
+**Texture Analysis (Floral/Textured):**
+```python
+# Variance of Laplacian (measures texture richness)
+laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+texture_variance = laplacian.var()
+
+if texture_variance > 500:  # High variance = complex texture
+    pattern = "textured" or "floral"
+else:
+    pattern = "solid"  # Low variance = plain/solid color
+```
+
+**4.3 Color Metrics**
+
+**Brightness:**
+```python
+brightness = np.mean(gray)  # Average pixel intensity [0-255]
+# Bright image: ~200, Dark image: ~50
+```
+
+**Color Diversity (Standard Deviation):**
+```python
+color_diversity = np.std(img)  # How varied the colors are
+# High diversity (~200): Multi-colored, Low diversity (~20): Monochrome
+```
+
+**Temperature (Warm vs Cool):**
+```python
+avg_red = np.mean(img[:, :, 0])
+avg_blue = np.mean(img[:, :, 2])
+
+if avg_red > avg_blue:
+    temperature = "warm"  # Red, orange, yellow dominant
+else:
+    temperature = "cool"  # Blue, green, purple dominant
+```
+
+**Saturation (Color Intensity):**
+```python
+hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+saturation = np.mean(hsv[:, :, 1])  # Average S channel [0-255]
+# High saturation (~200): Vibrant colors, Low saturation (~20): Dull/grayish
+```
+
+#### **Step 5: Outfit Compatibility Scoring (3-Input Siamese CNN)**
+
+**5.1 Input Preparation**
+
+User's wardrobe contains classified items:
+```python
+wardrobe = {
+    'Topwear': [img_top1, img_top2, ...],      # e.g., 10 tops
+    'Bottomwear': [img_bottom1, img_bottom2, ...],  # e.g., 8 bottoms
+    'Footwear': [img_shoe1, img_shoe2, ...]    # e.g., 6 shoes
+}
+```
+
+Generate all valid outfit combinations:
+```python
+# For complete outfits (top + bottom + shoes):
+outfits = []
+for top in wardrobe['Topwear']:
+    for bottom in wardrobe['Bottomwear']:
+        for shoes in wardrobe['Footwear']:
+            outfits.append((top, bottom, shoes))
+# Total combinations: 10 × 8 × 6 = 480 outfits
+```
+
+**5.2 Siamese CNN Architecture**
+
+**Feature Extraction (Shared MobileNetV2 × 3):**
+```
+Input 1 (Top):    (224, 224, 3) → MobileNetV2 → GlobalAvgPool → Dense(128) → L2Norm → feat1 (128,)
+Input 2 (Bottom): (224, 224, 3) → MobileNetV2 → GlobalAvgPool → Dense(128) → L2Norm → feat2 (128,)
+Input 3 (Shoes):  (224, 224, 3) → MobileNetV2 → GlobalAvgPool → Dense(128) → L2Norm → feat3 (128,)
+```
+
+**Note**: All 3 inputs share the **same MobileNetV2 weights** (Siamese architecture)
+
+**L2 Normalization:**
+$$
+\text{feat}_{\text{normalized}} = \frac{\text{feat}}{\|\text{feat}\|_2} = \frac{\text{feat}}{\sqrt{\sum_{i=1}^{128} \text{feat}_i^2}}
+$$
+- **Purpose**: Makes features unit-length, focuses on direction (not magnitude)
+
+**5.3 Feature Fusion**
+
+Three complementary operations capture different interaction patterns:
+
+**Concatenation (Direct Features):**
+```python
+concat = tf.concat([feat1, feat2, feat3], axis=-1)
+# Shape: (128,) + (128,) + (128,) = (384,)
+# Preserves individual item characteristics
+```
+
+**Difference (Contrast Between Items):**
+```python
+diff_12 = tf.abs(feat1 - feat2)  # Top vs Bottom
+diff_13 = tf.abs(feat1 - feat3)  # Top vs Shoes
+diff_23 = tf.abs(feat2 - feat3)  # Bottom vs Shoes
+diff = tf.concat([diff_12, diff_13, diff_23], axis=-1)
+# Shape: (128,) + (128,) + (128,) = (384,)
+# Captures dissimilarity between pairs
+```
+
+**Product (Interaction Between Items):**
+```python
+prod_12 = feat1 * feat2  # Element-wise multiplication
+prod_13 = feat1 * feat3
+prod_23 = feat2 * feat3
+prod = tf.concat([prod_12, prod_13, prod_23], axis=-1)
+# Shape: (128,) + (128,) + (128,) = (384,)
+# Captures co-occurrence patterns
+```
+
+**Combined Feature Vector:**
+```python
+combined = tf.concat([concat, diff, prod], axis=-1)
+# Shape: (384,) + (384,) + (384,) = (1152,) → Actually (640,) after optimization
+```
+
+**5.4 Compatibility Scoring Head**
+```
+Input: (640,) [Fused features]
+↓ Dense(256, activation='relu')
+↓ Dropout(0.4)  # Prevent overfitting
+↓ Dense(128, activation='relu')
+↓ Dropout(0.3)
+↓ Dense(64, activation='relu')
+↓ Dense(1, activation='sigmoid')
+Output: (1,) [Compatibility score 0.0-1.0]
+```
+
+**Sigmoid Activation:**
+$$
+\sigma(x) = \frac{1}{1 + e^{-x}}
+$$
+- **Output Range**: (0, 1)
+- **Interpretation**: Probability that outfit is compatible
+  - Score > 0.7: High compatibility (good outfit)
+  - Score 0.4-0.7: Medium compatibility (acceptable)
+  - Score < 0.4: Low compatibility (poor outfit)
+
+**5.5 Batch Processing**
+```python
+# Score all 480 outfits efficiently in batches
+scores = model.predict([all_tops, all_bottoms, all_shoes], batch_size=32)
+# Processing time: ~480 outfits × 50ms / 32 batch = ~750ms total
+```
+
+#### **Step 6: Color Harmony Validation**
+
+**Extract Colors from Predictions:**
+```python
+top_colors = kmeans_top.cluster_centers_      # 3 dominant RGB colors
+bottom_colors = kmeans_bottom.cluster_centers_
+shoe_colors = kmeans_shoe.cluster_centers_
+```
+
+**Convert RGB to HSV (Hue-Saturation-Value):**
+```python
+top_hsv = rgb_to_hsv(top_colors[0])     # Use most dominant color
+bottom_hsv = rgb_to_hsv(bottom_colors[0])
+shoe_hsv = rgb_to_hsv(shoe_colors[0])
+```
+
+**Hue Difference (Color Wheel Distance):**
+```python
+hue_diff = abs(top_hsv[0] - bottom_hsv[0])
+if hue_diff > 180:
+    hue_diff = 360 - hue_diff  # Wrap around color wheel
+```
+
+**Harmony Rules:**
+
+**Complementary Colors (Opposite on Color Wheel):**
+$$
+\text{complementary} = \begin{cases}
+1.0 & \text{if } 160° \leq |\Delta \text{hue}| \leq 200° \\
+0.0 & \text{otherwise}
+\end{cases}
+$$
+Example: Blue (240°) + Orange (60°) → Δ180° → Complementary
+
+**Analogous Colors (Adjacent on Color Wheel):**
+$$
+\text{analogous} = \begin{cases}
+1.0 & \text{if } |\Delta \text{hue}| \leq 30° \\
+0.0 & \text{otherwise}
+\end{cases}
+$$
+Example: Blue (240°) + Blue-green (210°) → Δ30° → Analogous
+
+**Warm/Cool Balance:**
+```python
+warm_count = sum([1 for item in [top, bottom, shoe] if item['temperature'] == 'warm'])
+cool_count = 3 - warm_count
+
+balance_score = (warm_count + cool_count) / 3.0
+# Perfect: 2 warm + 1 cool = 1.0
+# Unbalanced: 3 warm + 0 cool = 0.67
+```
+
+**Final Color Compatibility:**
+$$
+C_{\text{color}} = 0.4 \times \text{complementary} + 0.4 \times \text{analogous} + 0.2 \times \text{balance}
+$$
+
+#### **Step 7: Pattern Clash Detection**
+
+**Pattern Clash Matrix:**
+```python
+CLASH_PENALTIES = {
+    ('striped_horizontal', 'checkered'): -0.4,
+    ('striped_vertical', 'checkered'): -0.4,
+    ('striped_horizontal', 'dotted'): -0.2,
+    ('striped_vertical', 'dotted'): -0.2,
+}
+
+# Check all pairs
+pattern_score = 0.0
+if (top_pattern, bottom_pattern) in CLASH_PENALTIES:
+    pattern_score += CLASH_PENALTIES[(top_pattern, bottom_pattern)]
+if (top_pattern, shoe_pattern) in CLASH_PENALTIES:
+    pattern_score += CLASH_PENALTIES[(top_pattern, shoe_pattern)]
+if (bottom_pattern, shoe_pattern) in CLASH_PENALTIES:
+    pattern_score += CLASH_PENALTIES[(bottom_pattern, shoe_pattern)]
+
+# Multiple patterns penalty
+pattern_count = len(set([top_pattern, bottom_pattern, shoe_pattern]) - {'solid'})
+if pattern_count > 2:
+    pattern_score -= 0.3
+```
+
+#### **Step 8: Occasion & Gender Filtering**
+
+**Gender Validation:**
+```python
+# Extract gender from metadata (Men/Women/Unisex)
+if not (top_gender == bottom_gender == shoe_gender):
+    score = 0.0  # Reject cross-gender outfits
+```
+
+**Occasion Matching:**
+```python
+COMPATIBLE_OCCASIONS = {
+    'Casual': ['Casual', 'Smart Casual'],
+    'Formal': ['Formal', 'Party'],
+    'Sports': ['Sports', 'Casual'],
+}
+
+if item3_occasion not in COMPATIBLE_OCCASIONS.get(item1_occasion, []):
+    score *= 0.5  # Penalize occasion mismatch
+```
+
+#### **Step 9: Final Ranking & Output**
+
+**Combine All Scores:**
+$$
+\text{Final Score} = 0.5 \times \text{CNN Score} + 0.25 \times C_{\text{color}} + 0.15 \times C_{\text{pattern}} + 0.1 \times C_{\text{occasion}}
+$$
+
+**Sort Outfits:**
+```python
+outfits_ranked = sorted(outfits, key=lambda x: x['final_score'], reverse=True)
+top_10_recommendations = outfits_ranked[:10]
+```
+
+**Output to User:**
+```json
+{
+  "outfit_id": 1,
+  "items": {
+    "top": "Blue Oxford Shirt",
+    "bottom": "Khaki Chinos",
+    "shoes": "Brown Leather Loafers"
+  },
+  "compatibility_score": 0.87,
+  "color_harmony": "complementary",
+  "pattern_check": "no_clash",
+  "occasion": "Smart Casual",
+  "reasoning": "Complementary blue/brown pairing, solid patterns avoid clash, appropriate for business casual."
+}
+```
+
+**Total Processing Time (End-to-End):**
+- Image upload & preprocessing: ~10ms
+- Clothing classification: ~50ms (GPU) per image
+- Feature extraction: ~30ms per image
+- Compatibility scoring: ~750ms for 480 outfits (batch)
+- Ranking & filtering: ~20ms
+- **Total**: ~1.5 seconds for complete wardrobe analysis
 
 ---
 
