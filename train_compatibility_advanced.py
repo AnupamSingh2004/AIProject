@@ -92,63 +92,90 @@ def rgb_to_hsv(rgb):
     return h, s, v
 
 def color_harmony_score(rgb1, rgb2):
-    """Calculate color harmony score (0-1) based on HSV."""
+    """Calculate color harmony score (0-1) based on HSV - STRICT VERSION."""
     h1, s1, v1 = rgb_to_hsv(rgb1)
     h2, s2, v2 = rgb_to_hsv(rgb2)
     
     # Hue difference
     hue_diff = min(abs(h1 - h2), 360 - abs(h1 - h2))
     
-    # Complementary colors (opposite on wheel): 150-210 degrees
-    if 150 <= hue_diff <= 210:
+    # Monochromatic (same hue, different values) - BEST
+    if hue_diff <= 15 and abs(v1 - v2) > 0.15:
+        return 1.0
+    
+    # Analogous colors (close on wheel): 15-45 degrees
+    if 15 < hue_diff <= 45:
+        return 0.95
+    
+    # Complementary colors (opposite on wheel): 165-195 degrees
+    if 165 <= hue_diff <= 195:
         return 0.9
     
-    # Analogous colors (close on wheel): 0-60 degrees
-    if hue_diff <= 60:
+    # Triadic: 115-125 degrees
+    if 115 <= hue_diff <= 125:
         return 0.85
     
-    # Triadic: 100-140 degrees
-    if 100 <= hue_diff <= 140:
-        return 0.75
+    # Neutral pairing (one has low saturation < 0.15)
+    if s1 < 0.15 or s2 < 0.15:
+        return 0.9  # Neutrals go with everything
     
-    # Neutral pairing (one has low saturation)
-    if s1 < 0.2 or s2 < 0.2:
-        return 0.8
+    # Both neutrals (black/white/gray)
+    if s1 < 0.15 and s2 < 0.15:
+        return 0.95
     
-    # Moderate harmony
-    return 0.5
+    # Moderate harmony (45-90 degrees)
+    if 45 < hue_diff <= 90:
+        return 0.65
+    
+    # Poor harmony (clashing colors)
+    if 90 < hue_diff < 165:
+        return 0.3  # HARSH PENALTY
+    
+    # Very poor
+    return 0.2
 
 def pattern_compatibility(pattern1, pattern2):
-    """Check if patterns clash."""
+    """Check if patterns clash - STRICT VERSION."""
     # Solid goes with everything
     if pattern1 == 'solid' or pattern2 == 'solid':
         return 1.0
     
+    # Textured is neutral (not too busy)
+    if pattern1 == 'textured' or pattern2 == 'textured':
+        return 0.9
+    
     # Same patterns are okay
     if pattern1 == pattern2:
-        return 0.8
+        return 0.85
     
-    # Clashing patterns
-    clash_pairs = [
+    # MAJOR CLASHING PATTERNS - HARSH PENALTY
+    major_clash_pairs = [
         ('checkered', 'striped_horizontal'),
         ('checkered', 'striped_vertical'),
         ('striped_horizontal', 'striped_vertical'),
         ('floral', 'checkered'),
         ('floral', 'striped_horizontal'),
         ('floral', 'striped_vertical'),
-        ('dotted', 'striped_horizontal'),
-        ('dotted', 'striped_vertical'),
+        ('dotted', 'checkered'),
     ]
     
-    for p1, p2 in clash_pairs:
+    for p1, p2 in major_clash_pairs:
         if (pattern1 == p1 and pattern2 == p2) or (pattern1 == p2 and pattern2 == p1):
-            return 0.2
+            return 0.05  # VERY BAD - almost impossible to make work
     
-    # Textured is neutral
-    if pattern1 == 'textured' or pattern2 == 'textured':
-        return 0.7
+    # Minor clashes
+    minor_clash_pairs = [
+        ('dotted', 'striped_horizontal'),
+        ('dotted', 'striped_vertical'),
+        ('floral', 'dotted'),
+    ]
     
-    return 0.6
+    for p1, p2 in minor_clash_pairs:
+        if (pattern1 == p1 and pattern2 == p2) or (pattern1 == p2 and pattern2 == p1):
+            return 0.3  # BAD but not terrible
+    
+    # Two different busy patterns (not solid/textured)
+    return 0.5
 
 def create_training_pairs(df, n_pairs=10000):
     """Create COMPLETE OUTFIT SETS (3 items: top + bottom + shoes) considering patterns, colors, gender, and OCCASION."""
@@ -176,46 +203,48 @@ def create_training_pairs(df, n_pairs=10000):
     n_negative = n_pairs // 2
     
     # Occasion compatibility rules
-    def occasion_compatible(usage1, usage2):
-        """Check if two items have compatible usage/occasion."""
-        if pd.isna(usage1) or pd.isna(usage2):
-            return 0.7  # Unknown usage, assume moderate compatibility
+    def occasion_compatible(usage1, usage2, usage3=None):
+        """Check if items have compatible usage/occasion - STRICT VERSION."""
+        usages = [u for u in [usage1, usage2, usage3] if not pd.isna(u)]
+        if not usages:
+            return 0.5  # Unknown usage, assume low-medium compatibility
         
-        usage1 = str(usage1).strip()
-        usage2 = str(usage2).strip()
+        usages = [str(u).strip() for u in usages]
         
-        # Perfect match
-        if usage1 == usage2:
+        # All same usage - PERFECT
+        if len(set(usages)) == 1:
             return 1.0
         
-        # Compatible combinations
-        compatible_pairs = {
-            ('Casual', 'Sports'): 0.8,
-            ('Casual', 'Travel'): 0.9,
-            ('Casual', 'Home'): 0.9,
-            ('Formal', 'Smart Casual'): 0.8,
-            ('Smart Casual', 'Party'): 0.8,
-            ('Sports', 'Travel'): 0.7,
-        }
+        # Compatible combinations with higher standards
+        compatible_sets = [
+            {'Casual', 'Travel'},
+            {'Casual', 'Home'},
+            {'Sports', 'Casual'},
+            {'Sports', 'Travel'},
+            {'Formal', 'Smart Casual'},
+            {'Smart Casual', 'Party'},
+        ]
         
-        # Check both directions
-        score = compatible_pairs.get((usage1, usage2)) or compatible_pairs.get((usage2, usage1))
-        if score:
-            return score
+        usage_set = set(usages)
+        for comp_set in compatible_sets:
+            if usage_set.issubset(comp_set):
+                return 0.85  # Good compatibility
         
-        # Incompatible combinations (clash)
-        incompatible_pairs = {
-            ('Formal', 'Sports'),
-            ('Formal', 'Home'),
-            ('Formal', 'Casual'),
-            ('Party', 'Sports'),
-            ('Ethnic', 'Sports'),
-        }
+        # INCOMPATIBLE combinations (clash) - HARSH PENALTY
+        incompatible_sets = [
+            {'Formal', 'Sports'},
+            {'Formal', 'Home'},
+            {'Formal', 'Casual'},
+            {'Party', 'Sports'},
+            {'Ethnic', 'Sports'},
+            {'Ethnic', 'Casual'},
+        ]
         
-        if (usage1, usage2) in incompatible_pairs or (usage2, usage1) in incompatible_pairs:
-            return 0.2  # Strong penalty
+        for incomp_set in incompatible_sets:
+            if len(usage_set & incomp_set) == len(usage_set):  # All items in incompatible set
+                return 0.1  # VERY BAD
         
-        return 0.6  # Default moderate compatibility
+        return 0.5  # Default moderate compatibility
     
     # POSITIVE OUTFITS - well-coordinated complete looks
     print(f"   Creating {n_positive} positive (good) outfits...")
@@ -242,21 +271,29 @@ def create_training_pairs(df, n_pairs=10000):
                 
                 # PATTERN CHECK - very important!
                 top_bottom_pattern = pattern_compatibility(top['pattern'], bottom['pattern'])
+                top_shoes_pattern = pattern_compatibility(top['pattern'], shoes['pattern'])
+                bottom_shoes_pattern = pattern_compatibility(bottom['pattern'], shoes['pattern'])
                 
-                # OCCASION/USAGE consistency - NEW!
-                occasion_score = occasion_compatible(top.get('usage', ''), bottom.get('usage', ''))
-                
-                # Overall outfit score
-                outfit_score = (
-                    top_bottom_color * 0.25 +
-                    top_shoes_color * 0.08 +
-                    bottom_shoes_color * 0.07 +
-                    top_bottom_pattern * 0.35 +  # Patterns are crucial!
-                    occasion_score * 0.25          # Occasion match important!
+                # OCCASION/USAGE consistency - STRICT!
+                occasion_score = occasion_compatible(
+                    top.get('usage', ''), 
+                    bottom.get('usage', ''),
+                    shoes.get('usage', '')
                 )
                 
-                # Accept if good outfit
-                if outfit_score > 0.55:
+                # Overall outfit score with STRICTER weights
+                outfit_score = (
+                    top_bottom_color * 0.20 +
+                    top_shoes_color * 0.05 +
+                    bottom_shoes_color * 0.05 +
+                    top_bottom_pattern * 0.30 +     # Patterns are crucial!
+                    top_shoes_pattern * 0.05 +
+                    bottom_shoes_pattern * 0.05 +
+                    occasion_score * 0.30            # Occasion match very important!
+                )
+                
+                # Accept if GOOD outfit (raised threshold)
+                if outfit_score > 0.70:  # STRICTER: was 0.55, now 0.70
                     outfits.append((top['id'], bottom['id'], shoes['id']))
                     labels.append(1)
                     
@@ -272,17 +309,25 @@ def create_training_pairs(df, n_pairs=10000):
                 top_shoes_color = color_harmony_score(top['color1_rgb'], shoes['color1_rgb'])
                 bottom_shoes_color = color_harmony_score(bottom['color1_rgb'], shoes['color1_rgb'])
                 top_bottom_pattern = pattern_compatibility(top['pattern'], bottom['pattern'])
-                occasion_score = occasion_compatible(top.get('usage', ''), bottom.get('usage', ''))
-                
-                outfit_score = (
-                    top_bottom_color * 0.25 +
-                    top_shoes_color * 0.08 +
-                    bottom_shoes_color * 0.07 +
-                    top_bottom_pattern * 0.35 +
-                    occasion_score * 0.25
+                top_shoes_pattern = pattern_compatibility(top['pattern'], shoes['pattern'])
+                bottom_shoes_pattern = pattern_compatibility(bottom['pattern'], shoes['pattern'])
+                occasion_score = occasion_compatible(
+                    top.get('usage', ''), 
+                    bottom.get('usage', ''),
+                    shoes.get('usage', '')
                 )
                 
-                if outfit_score > 0.55:
+                outfit_score = (
+                    top_bottom_color * 0.20 +
+                    top_shoes_color * 0.05 +
+                    bottom_shoes_color * 0.05 +
+                    top_bottom_pattern * 0.30 +
+                    top_shoes_pattern * 0.05 +
+                    bottom_shoes_pattern * 0.05 +
+                    occasion_score * 0.30
+                )
+                
+                if outfit_score > 0.70:  # STRICTER
                     outfits.append((top['id'], bottom['id'], shoes['id']))
                     labels.append(1)
                     
@@ -291,17 +336,26 @@ def create_training_pairs(df, n_pairs=10000):
                 shoes = female_footwear.sample(1).iloc[0]
                 
                 dress_shoes_color = color_harmony_score(dress['color1_rgb'], shoes['color1_rgb'])
-                occasion_score = occasion_compatible(dress.get('usage', ''), shoes.get('usage', ''))
+                dress_shoes_pattern = pattern_compatibility(dress['pattern'], shoes['pattern'])
+                occasion_score = occasion_compatible(
+                    dress.get('usage', ''), 
+                    shoes.get('usage', '')
+                )
                 
-                # Dresses with solid/textured patterns are easier to match
-                dress_score = dress_shoes_color * 0.5 + occasion_score * 0.5
-                if dress_score > 0.55 or dress['pattern'] in ['solid', 'textured']:
+                # Dresses scoring
+                dress_score = (
+                    dress_shoes_color * 0.35 + 
+                    dress_shoes_pattern * 0.30 +
+                    occasion_score * 0.35
+                )
+                
+                if dress_score > 0.70:  # STRICTER
                     outfits.append((dress['id'], dress['id'], shoes['id']))
                     labels.append(1)
     
     print(f"   ✅ Created {len([l for l in labels if l == 1])} positive outfits")
     
-    # NEGATIVE OUTFITS - badly coordinated looks (considering patterns + OCCASIONS!)
+    # NEGATIVE OUTFITS - badly coordinated looks (EXPLICIT bad examples)
     print(f"   Creating {n_negative} negative (bad) outfits...")
     attempts = 0
     max_attempts = n_negative * 20
@@ -319,22 +373,36 @@ def create_training_pairs(df, n_pairs=10000):
                 
                 top_bottom_color = color_harmony_score(top['color1_rgb'], bottom['color1_rgb'])
                 top_bottom_pattern = pattern_compatibility(top['pattern'], bottom['pattern'])
-                occasion_score = occasion_compatible(top.get('usage', ''), bottom.get('usage', ''))
+                occasion_score = occasion_compatible(
+                    top.get('usage', ''), 
+                    bottom.get('usage', ''),
+                    shoes.get('usage', '')
+                )
                 
                 # PATTERN CLASH - major red flag!
-                has_pattern_clash = (
+                has_major_pattern_clash = (
                     top['pattern'] in ['checkered', 'striped_horizontal', 'striped_vertical', 'floral'] and
                     bottom['pattern'] in ['checkered', 'striped_horizontal', 'striped_vertical', 'floral'] and
                     top['pattern'] != bottom['pattern'] and
-                    top['pattern'] != 'solid' and bottom['pattern'] != 'solid'
+                    top['pattern'] not in ['solid', 'textured'] and 
+                    bottom['pattern'] not in ['solid', 'textured']
                 )
                 
-                poor_coordination = (top_bottom_color * 0.3 + top_bottom_pattern * 0.4 + occasion_score * 0.3) < 0.5
+                # COLOR CLASH - clashing hues
+                has_color_clash = top_bottom_color < 0.35
                 
                 # OCCASION CLASH - formal + sports, etc.
-                occasion_clash = occasion_score < 0.3
+                has_occasion_clash = occasion_score < 0.25
                 
-                if has_pattern_clash or poor_coordination or occasion_clash:
+                # Overall bad outfit score
+                bad_outfit_score = (
+                    top_bottom_color * 0.20 +
+                    top_bottom_pattern * 0.50 +
+                    occasion_score * 0.30
+                )
+                
+                # Accept as negative if it has explicit problems
+                if has_major_pattern_clash or has_color_clash or has_occasion_clash or bad_outfit_score < 0.45:
                     outfits.append((top['id'], bottom['id'], shoes['id']))
                     labels.append(0)
         else:
@@ -345,18 +413,32 @@ def create_training_pairs(df, n_pairs=10000):
                 bottom = female_bottomwear.sample(1).iloc[0]
                 shoes = female_footwear.sample(1).iloc[0]
                 
+                top_bottom_color = color_harmony_score(top['color1_rgb'], bottom['color1_rgb'])
                 top_bottom_pattern = pattern_compatibility(top['pattern'], bottom['pattern'])
-                occasion_score = occasion_compatible(top.get('usage', ''), bottom.get('usage', ''))
-                
-                has_pattern_clash = (
-                    top['pattern'] in ['checkered', 'striped_horizontal', 'striped_vertical', 'floral'] and
-                    bottom['pattern'] in ['checkered', 'striped_horizontal', 'striped_vertical', 'floral'] and
-                    top['pattern'] != bottom['pattern']
+                occasion_score = occasion_compatible(
+                    top.get('usage', ''), 
+                    bottom.get('usage', ''),
+                    shoes.get('usage', '')
                 )
                 
-                poor_coordination = (top_bottom_pattern * 0.5 + occasion_score * 0.5) < 0.4
+                has_major_pattern_clash = (
+                    top['pattern'] in ['checkered', 'striped_horizontal', 'striped_vertical', 'floral'] and
+                    bottom['pattern'] in ['checkered', 'striped_horizontal', 'striped_vertical', 'floral'] and
+                    top['pattern'] != bottom['pattern'] and
+                    top['pattern'] not in ['solid', 'textured'] and 
+                    bottom['pattern'] not in ['solid', 'textured']
+                )
                 
-                if has_pattern_clash or poor_coordination or occasion_score < 0.3:
+                has_color_clash = top_bottom_color < 0.35
+                has_occasion_clash = occasion_score < 0.25
+                
+                bad_outfit_score = (
+                    top_bottom_color * 0.20 +
+                    top_bottom_pattern * 0.50 +
+                    occasion_score * 0.30
+                )
+                
+                if has_major_pattern_clash or has_color_clash or has_occasion_clash or bad_outfit_score < 0.45:
                     outfits.append((top['id'], bottom['id'], shoes['id']))
                     labels.append(0)
                     
@@ -365,9 +447,15 @@ def create_training_pairs(df, n_pairs=10000):
                 shoes = female_footwear.sample(1).iloc[0]
                 
                 color_score = color_harmony_score(dress['color1_rgb'], shoes['color1_rgb'])
-                occasion_score = occasion_compatible(dress.get('usage', ''), shoes.get('usage', ''))
+                pattern_score = pattern_compatibility(dress['pattern'], shoes['pattern'])
+                occasion_score = occasion_compatible(
+                    dress.get('usage', ''), 
+                    shoes.get('usage', '')
+                )
                 
-                if color_score < 0.4 or occasion_score < 0.3:
+                bad_dress_score = color_score * 0.4 + pattern_score * 0.3 + occasion_score * 0.3
+                
+                if color_score < 0.35 or occasion_score < 0.25 or bad_dress_score < 0.45:
                     outfits.append((dress['id'], dress['id'], shoes['id']))
                     labels.append(0)
     
@@ -481,7 +569,7 @@ print("✅ All datasets created and cached")
 # Build 3-input compatibility model for complete outfits
 print("\n🏗️  Building 3-input Siamese CNN model for complete outfits...")
 
-# Shared feature extractor
+# Shared feature extractor (MobileNetV2 base)
 base_model = tf.keras.applications.MobileNetV2(
     include_top=False,
     weights='imagenet',
@@ -490,11 +578,14 @@ base_model = tf.keras.applications.MobileNetV2(
 )
 base_model.trainable = False  # Freeze initially
 
-# Build feature extractor
+# Build IMPROVED feature extractor with deeper understanding
 feature_input = layers.Input(shape=(224, 224, 3))
 x = base_model(feature_input)
-x = layers.Dense(128, activation='relu')(x)
+x = layers.Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.01))(x)
+x = layers.BatchNormalization()(x)
 x = layers.Dropout(0.3)(x)
+x = layers.Dense(128, activation='relu', kernel_regularizer=keras.regularizers.l2(0.01))(x)
+x = layers.BatchNormalization()(x)
 feature_output = layers.Dense(64, activation='relu', name='features')(x)
 feature_extractor = keras.Model(feature_input, feature_output, name='feature_extractor')
 
@@ -508,14 +599,52 @@ features_top = feature_extractor(input_top)
 features_bottom = feature_extractor(input_bottom)
 features_shoes = feature_extractor(input_shoes)
 
-# Combine all features
-combined = layers.Concatenate()([features_top, features_bottom, features_shoes])
+# IMPROVED FEATURE FUSION - Multiple interaction types
+# 1. Direct concatenation (preserve individual features)
+concat_features = layers.Concatenate()([features_top, features_bottom, features_shoes])
 
-# Compatibility scoring
-x = layers.Dense(256, activation='relu')(combined)
+# 2. Pairwise differences (capture contrast)
+diff_top_bottom = layers.Subtract()([features_top, features_bottom])
+diff_top_shoes = layers.Subtract()([features_top, features_shoes])
+diff_bottom_shoes = layers.Subtract()([features_bottom, features_shoes])
+diff_features = layers.Concatenate()([
+    layers.Lambda(lambda x: tf.abs(x))(diff_top_bottom),
+    layers.Lambda(lambda x: tf.abs(x))(diff_top_shoes),
+    layers.Lambda(lambda x: tf.abs(x))(diff_bottom_shoes)
+])
+
+# 3. Pairwise products (capture co-occurrence)
+prod_top_bottom = layers.Multiply()([features_top, features_bottom])
+prod_top_shoes = layers.Multiply()([features_top, features_shoes])
+prod_bottom_shoes = layers.Multiply()([features_bottom, features_shoes])
+prod_features = layers.Concatenate()([prod_top_bottom, prod_top_shoes, prod_bottom_shoes])
+
+# 4. Attention-like mechanism (learn what matters most)
+avg_features = layers.Average()([features_top, features_bottom, features_shoes])
+max_features = layers.Maximum()([features_top, features_bottom, features_shoes])
+
+# Combine ALL interaction types
+combined = layers.Concatenate()([
+    concat_features,    # Direct features (192)
+    diff_features,      # Differences (192)
+    prod_features,      # Products (192)
+    avg_features,       # Average (64)
+    max_features        # Maximum (64)
+])  # Total: 704 features
+
+# DEEPER compatibility scoring network
+x = layers.Dense(512, activation='relu', kernel_regularizer=keras.regularizers.l2(0.01))(combined)
+x = layers.BatchNormalization()(x)
+x = layers.Dropout(0.5)(x)
+
+x = layers.Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.01))(x)
+x = layers.BatchNormalization()(x)
 x = layers.Dropout(0.4)(x)
-x = layers.Dense(128, activation='relu')(x)
+
+x = layers.Dense(128, activation='relu', kernel_regularizer=keras.regularizers.l2(0.01))(x)
+x = layers.BatchNormalization()(x)
 x = layers.Dropout(0.3)(x)
+
 x = layers.Dense(64, activation='relu')(x)
 x = layers.Dropout(0.2)(x)
 
@@ -526,18 +655,18 @@ compatibility = layers.Dense(1, activation='sigmoid', name='compatibility')(x)
 model = keras.Model(
     inputs=[input_top, input_bottom, input_shoes],
     outputs=compatibility,
-    name='outfit_compatibility_3item'
+    name='outfit_compatibility_3item_advanced'
 )
 
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=0.0001),
     loss='binary_crossentropy',
-    metrics=['accuracy', keras.metrics.AUC(name='auc')]
+    metrics=['accuracy', keras.metrics.AUC(name='auc'), keras.metrics.Precision(name='precision'), keras.metrics.Recall(name='recall')]
 )
 
 print(f"✅ Model built: {model.count_params():,} parameters")
 
-# Callbacks
+# Callbacks with improved training strategy
 callbacks = [
     keras.callbacks.ModelCheckpoint(
         MODELS / 'outfit_compatibility_advanced.keras',
@@ -550,15 +679,20 @@ callbacks = [
         monitor='val_loss',
         factor=0.5,
         patience=3,
-        min_lr=1e-6,
+        min_lr=1e-7,
         verbose=1
     ),
     keras.callbacks.EarlyStopping(
         monitor='val_auc',
         mode='max',
-        patience=7,
+        patience=10,  # More patience for better convergence
         restore_best_weights=True,
         verbose=1
+    ),
+    # Learning rate warmup
+    keras.callbacks.LearningRateScheduler(
+        lambda epoch: 0.0001 * min(1.0, (epoch + 1) / 5),  # Warmup first 5 epochs
+        verbose=0
     )
 ]
 
@@ -577,7 +711,7 @@ print(f"Validation steps: {validation_steps}")
 history = model.fit(
     train_dataset,
     steps_per_epoch=steps_per_epoch,
-    epochs=25,
+    epochs=50,  # More epochs with early stopping
     validation_data=val_dataset,
     validation_steps=validation_steps,
     callbacks=callbacks,
@@ -590,28 +724,44 @@ test_pairs, test_labels = create_training_pairs(test_df, n_pairs=2000)
 test_dataset = create_dataset_from_pairs(test_pairs, test_labels, batch_size=32)
 test_steps = len(test_pairs) // 32
 
-test_loss, test_acc, test_auc = model.evaluate(
+test_results = model.evaluate(
     test_dataset,
     steps=test_steps,
     verbose=1
 )
 
+# Unpack all metrics
+test_loss = test_results[0]
+test_acc = test_results[1]
+test_auc = test_results[2]
+test_precision = test_results[3]
+test_recall = test_results[4]
+
 print(f"\n✅ Test Results:")
 print(f"   Loss: {test_loss:.4f}")
 print(f"   Accuracy: {test_acc:.4f}")
 print(f"   AUC: {test_auc:.4f}")
+print(f"   Precision: {test_precision:.4f}")
+print(f"   Recall: {test_recall:.4f}")
+print(f"   F1-Score: {2 * (test_precision * test_recall) / (test_precision + test_recall):.4f}")
 
-# Save history
+# Save history with additional metrics
 history_dict = {
     'train_loss': [float(x) for x in history.history['loss']],
     'train_accuracy': [float(x) for x in history.history['accuracy']],
     'train_auc': [float(x) for x in history.history['auc']],
+    'train_precision': [float(x) for x in history.history['precision']],
+    'train_recall': [float(x) for x in history.history['recall']],
     'val_loss': [float(x) for x in history.history['val_loss']],
     'val_accuracy': [float(x) for x in history.history['val_accuracy']],
     'val_auc': [float(x) for x in history.history['val_auc']],
+    'val_precision': [float(x) for x in history.history['val_precision']],
+    'val_recall': [float(x) for x in history.history['val_recall']],
     'test_loss': float(test_loss),
     'test_accuracy': float(test_acc),
-    'test_auc': float(test_auc)
+    'test_auc': float(test_auc),
+    'test_precision': float(test_precision),
+    'test_recall': float(test_recall)
 }
 
 with open(MODELS / 'compatibility_advanced_history.json', 'w') as f:
@@ -625,6 +775,11 @@ print(f"\n✅ Model saved: {MODELS / 'outfit_compatibility_advanced.keras'}")
 print(f"✅ History saved: {MODELS / 'compatibility_advanced_history.json'}")
 print("\nThis model uses:")
 print("  • Real RGB color values for color harmony")
-print("  • Pattern detection to avoid clashes")
-print("  • Brightness balance for visual appeal")
+print("  • Pattern detection to avoid clashes (striped, checkered, floral, etc.)")
+print("  • Occasion matching (Casual, Formal, Sports, Party, Ethnic)")
+print("  • Gender-specific outfit rules (Men's vs Women's)")
 print("  • Deep CNN features from actual images")
+print("  • Strict compatibility scoring (70% threshold for good outfits)")
+print("\n⚠️  NOTE: Skin tone compatibility is NOT yet integrated.")
+print("   Skin tone analysis exists in database but not in this training.")
+print("   Future enhancement: Match outfit colors to user's skin undertone.")
