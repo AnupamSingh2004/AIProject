@@ -18,16 +18,23 @@ An intelligent **deep learning-powered** fashion recommendation system that uses
    - **Training**: 2-phase (frozen base → fine-tuned), 31,093 training images
    - **GPU Accelerated**: Trains on NVIDIA RTX 3050 in ~20 minutes
 
-2. **👔 Advanced Outfit Compatibility Model**
-   - **Architecture**: 3-input Siamese CNN (2.7M parameters)
+2. **👔 Advanced Outfit Compatibility Model (78.28% Accuracy, 88.09% AUC)**
+   - **Architecture**: 3-input Siamese CNN (3.16M parameters)
    - **Inputs**: Top image + Bottom image + Shoes image (224x224x3 each)
    - **Output**: Compatibility score (0-1, sigmoid activation)
+   - **Performance Metrics** (Test Set):
+     - Accuracy: **78.28%**
+     - AUC-ROC: **88.09%**
+     - Precision: **83.20%**
+     - Recall: **70.87%**
+     - F1-Score: **76.54%**
    - **Features Considered**:
      - RGB color harmony (complementary, analogous, monochromatic)
-     - Pattern matching (solid, striped, checkered, floral, dotted)
+     - Pattern clash detection (striped+checkered penalty: -0.4)
      - Gender separation (Men's/Women's outfits)
-     - Style consistency (Casual, Formal, Sports, Party, Ethnic)
-   - **Training Strategy**: Balanced 50/50 positive/negative outfit sets
+     - Occasion matching (Casual, Formal, Sports, Party, Ethnic)
+   - **Training Strategy**: Balanced 50/50 positive/negative outfits, strict 70% threshold
+   - **Training Time**: ~13 minutes on RTX 3050 (35 epochs, early stopping)
 
 ### **Visual Feature Extraction**
 
@@ -164,11 +171,17 @@ This trains both models automatically.
 
 ```bash
 # Train clothing classifier only
-python models/clothing_classifier.py
+python train_classifier_simple.py
 
-# Train outfit compatibility model only
-python models/outfit_compatibility_model.py
+# Train advanced outfit compatibility model (3-input Siamese CNN)
+python train_compatibility_advanced.py
 ```
+
+**Training Output** (Compatibility Model):
+- Creates: `models/saved_models/outfit_compatibility_advanced.keras` (21 MB)
+- History: `models/saved_models/compatibility_advanced_history.json`
+- Training time: ~13 minutes on RTX 3050 GPU
+- Expected metrics: 78% accuracy, 88% AUC
 
 For detailed training instructions, see [TRAINING.md](TRAINING.md)
 
@@ -642,13 +655,20 @@ pattern_compatibility(P1, P2):
 | Inference Time | ~50 ms/image |
 
 #### **Compatibility Model**
-| Metric | Target |
-|--------|--------|
-| Expected Test Accuracy | 70-85% |
-| Expected AUC | 0.80-0.90 |
-| Parameters | 2,791,361 |
-| Training Time | ~15 min (GPU, cached images) |
+| Metric | Value |
+|--------|-------|
+| **Test Accuracy** | **78.28%** ✅ |
+| **Test AUC-ROC** | **88.09%** ✅ |
+| **Precision** | **83.20%** |
+| **Recall** | **70.87%** |
+| **F1-Score** | **76.54%** |
+| Val Accuracy (Best) | 81.19% |
+| Val AUC (Best) | 91.16% |
+| Parameters | 3,165,697 |
+| Training Time | ~13 min (GPU, 35 epochs) |
+| Training Pairs | 8,000 (50/50 balanced) |
 | Inference Time | ~50 ms/outfit |
+| Early Stopping | Epoch 25 (patience 10) |
 
 #### **Visual Feature Extraction**
 | Operation | Time (per image) |
@@ -746,21 +766,31 @@ outfit = {
 
 ### **10. Training Loss & Accuracy Progression**
 
-**Expected Training Curve** (Compatibility Model):
+**Actual Training Results** (Compatibility Model):
 
 ```
-Epoch 1:  Loss: 0.65  |  Acc: 62%  |  Val_Loss: 0.61  |  Val_Acc: 65%
-Epoch 5:  Loss: 0.48  |  Acc: 74%  |  Val_Loss: 0.52  |  Val_Acc: 73%
-Epoch 10: Loss: 0.38  |  Acc: 81%  |  Val_Loss: 0.45  |  Val_Acc: 78%
-Epoch 15: Loss: 0.32  |  Acc: 85%  |  Val_Loss: 0.42  |  Val_Acc: 80%
-Epoch 20: Loss: 0.28  |  Acc: 87%  |  Val_Loss: 0.41  |  Val_Acc: 81%
+Epoch 1:  Loss: 17.73 |  Acc: 51.41% |  Val_Loss: 17.43 |  Val_Acc: 60.50% |  Val_AUC: 65.79%
+Epoch 5:  Loss: 16.23 |  Acc: 66.30% |  Val_Loss: 15.55 |  Val_Acc: 75.38% |  Val_AUC: 81.48%
+Epoch 10: Loss: 13.97 |  Acc: 73.59% |  Val_Loss: 13.37 |  Val_Acc: 76.88% |  Val_AUC: 87.41%
+Epoch 15: Loss: 10.84 |  Acc: 77.80% |  Val_Loss: 10.33 |  Val_Acc: 80.44% |  Val_AUC: 89.95%
+Epoch 20: Loss: 8.97  |  Acc: 79.94% |  Val_Loss: 8.53  |  Val_Acc: 80.87% |  Val_AUC: 90.49%
+Epoch 25: Loss: 6.60  |  Acc: 81.41% |  Val_Loss: 6.28  |  Val_Acc: 81.19% |  Val_AUC: 91.16% ⭐
+Epoch 35: Early stopping triggered (best model from epoch 25)
 ```
+
+**Final Test Performance**:
+- **Accuracy**: 78.28%
+- **AUC-ROC**: 88.09%
+- **Precision**: 83.20%
+- **Recall**: 70.87%
+- **F1-Score**: 76.54%
 
 **Preventing Overfitting**:
 - Dropout layers (0.2-0.4)
-- Early stopping (patience=7)
-- Balanced positive/negative samples
-- Data augmentation through shuffling
+- Early stopping (patience=10, triggered at epoch 35)
+- Balanced positive/negative samples (50/50)
+- Strict compatibility threshold (70% for positive outfits)
+- L2 regularization on MobileNetV2 features
 
 ---
 
