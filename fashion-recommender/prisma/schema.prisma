@@ -1,0 +1,149 @@
+// Prisma schema for Fashion Recommender
+// This defines the database structure and generates TypeScript types
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  name      String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  skinToneAnalyses    SkinToneAnalysis[]
+  wardrobes           Wardrobe[]
+  clothingItems       ClothingItem[]
+  outfitRecommendations OutfitRecommendation[]
+  savedOutfits        SavedOutfit[]
+
+  @@map("users")
+}
+
+model SkinToneAnalysis {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  photo           Bytes    // Store image as bytea
+  photoFilename   String?  @map("photo_filename") @db.VarChar(255)
+  fitzpatrickType String   @map("fitzpatrick_type") @db.VarChar(10)
+  undertone       String   @db.VarChar(20)
+  dominantColorR  Int      @map("dominant_color_r")
+  dominantColorG  Int      @map("dominant_color_g")
+  dominantColorB  Int      @map("dominant_color_b")
+  confidence      Decimal? @db.Decimal(3, 2)
+  analyzedAt      DateTime @default(now()) @map("analyzed_at")
+
+  // Relations
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfitRecommendations OutfitRecommendation[]
+
+  @@index([userId])
+  @@map("skin_tone_analysis")
+}
+
+model Wardrobe {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clothingItems ClothingItem[]
+
+  @@index([userId])
+  @@map("wardrobes")
+}
+
+model ClothingItem {
+  id              String   @id @default(uuid()) @db.Uuid
+  wardrobeId      String   @map("wardrobe_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  name            String   @db.VarChar(255)
+  image           Bytes    // Store image directly in database
+  imageFilename   String?  @map("image_filename") @db.VarChar(255)
+  imageMimetype   String?  @map("image_mimetype") @db.VarChar(100)
+  category        String   @db.VarChar(50) // Topwear, Bottomwear, Dress, Footwear, Accessories
+  clothingType    String?  @map("clothing_type") @db.VarChar(100)
+  dominantColorR  Int?     @map("dominant_color_r")
+  dominantColorG  Int?     @map("dominant_color_g")
+  dominantColorB  Int?     @map("dominant_color_b")
+  secondaryColors Json?    @map("secondary_colors")
+  style           String?  @db.VarChar(50)
+  pattern         String?  @db.VarChar(50)
+  season          String?  @db.VarChar(20)
+  occasion        String?  @db.VarChar(50)
+  aiAnalyzed      Boolean  @default(false) @map("ai_analyzed")
+  aiConfidence    Decimal? @map("ai_confidence") @db.Decimal(3, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  wardrobe              Wardrobe               @relation(fields: [wardrobeId], references: [id], onDelete: Cascade)
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfitsAsTop          OutfitRecommendation[] @relation("TopItem")
+  outfitsAsBottom       OutfitRecommendation[] @relation("BottomItem")
+  outfitsAsShoes        OutfitRecommendation[] @relation("ShoesItem")
+  outfitsAsAccessories  OutfitRecommendation[] @relation("AccessoriesItem")
+
+  @@index([userId])
+  @@index([wardrobeId])
+  @@index([category])
+  @@map("clothing_items")
+}
+
+model OutfitRecommendation {
+  id                   String   @id @default(uuid()) @db.Uuid
+  userId               String   @map("user_id") @db.Uuid
+  skinToneAnalysisId   String?  @map("skin_tone_analysis_id") @db.Uuid
+  topItemId            String?  @map("top_item_id") @db.Uuid
+  bottomItemId         String?  @map("bottom_item_id") @db.Uuid
+  shoesItemId          String?  @map("shoes_item_id") @db.Uuid
+  accessoriesItemId    String?  @map("accessories_item_id") @db.Uuid
+  occasion             String   @db.VarChar(50)
+  season               String?  @db.VarChar(20)
+  compatibilityScore   Decimal  @map("compatibility_score") @db.Decimal(3, 2)
+  skinToneMatchScore   Decimal? @map("skin_tone_match_score") @db.Decimal(3, 2)
+  colorHarmonyType     String?  @map("color_harmony_type") @db.VarChar(50)
+  reason               String?  @db.Text
+  createdAt            DateTime @default(now()) @map("created_at")
+  favorited            Boolean  @default(false)
+
+  // Relations
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skinToneAnalysis SkinToneAnalysis? @relation(fields: [skinToneAnalysisId], references: [id])
+  topItem          ClothingItem?     @relation("TopItem", fields: [topItemId], references: [id])
+  bottomItem       ClothingItem?     @relation("BottomItem", fields: [bottomItemId], references: [id])
+  shoesItem        ClothingItem?     @relation("ShoesItem", fields: [shoesItemId], references: [id])
+  accessoriesItem  ClothingItem?     @relation("AccessoriesItem", fields: [accessoriesItemId], references: [id])
+  savedOutfits     SavedOutfit[]
+
+  @@index([userId])
+  @@index([occasion])
+  @@map("outfit_recommendations")
+}
+
+model SavedOutfit {
+  id                      String   @id @default(uuid()) @db.Uuid
+  userId                  String   @map("user_id") @db.Uuid
+  name                    String   @db.VarChar(255)
+  outfitRecommendationId  String?  @map("outfit_recommendation_id") @db.Uuid
+  notes                   String?  @db.Text
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfitRecommendation OutfitRecommendation? @relation(fields: [outfitRecommendationId], references: [id])
+
+  @@index([userId])
+  @@map("saved_outfits")
+}

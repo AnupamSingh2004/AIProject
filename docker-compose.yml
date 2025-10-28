@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fashion_recommender_db
+    restart: always
+    environment:
+      POSTGRES_USER: fashion_user
+      POSTGRES_PASSWORD: fashion_password_2024
+      POSTGRES_DB: fashion_recommender
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fashion_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fashion_user -d fashion_recommender"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # AI Backend API (Python FastAPI)
+  ai_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fashion_ai_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://fashion_user:fashion_password_2024@postgres:5432/fashion_recommender
+      MODEL_PATH: /app/models/saved_models
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fashion_network
+
+  # NextJS Frontend
+  nextjs_app:
+    build:
+      context: ./fashion-recommender
+      dockerfile: Dockerfile
+    container_name: fashion_nextjs
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://fashion_user:fashion_password_2024@postgres:5432/fashion_recommender
+      AI_BACKEND_URL: http://ai_backend:8000
+      NEXT_PUBLIC_AI_BACKEND_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - ai_backend
+    networks:
+      - fashion_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  fashion_network:
+    driver: bridge
