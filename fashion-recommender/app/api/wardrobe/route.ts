@@ -17,13 +17,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const wardrobe = await prisma.wardrobe.create({
-      data: {
-        userId,
-        name,
-        description: description || null,
-      },
+    // Check if user exists, create if not
+    let user = await prisma.user.findUnique({
+      where: { email: userId },
     })
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: userId,
+          name: 'Demo User',
+        },
+      })
+    }
+
+    // Check if wardrobe exists
+    let wardrobe = await prisma.wardrobe.findFirst({
+      where: { userId: user.id },
+    })
+
+    if (!wardrobe) {
+      wardrobe = await prisma.wardrobe.create({
+        data: {
+          userId: user.id,
+          name,
+          description: description || null,
+        },
+      })
+    }
 
     return NextResponse.json({ success: true, wardrobe })
   } catch (error) {
@@ -48,8 +69,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email: userId },
+    })
+
+    if (!user) {
+      return NextResponse.json({ wardrobes: [] })
+    }
+
     const wardrobes = await prisma.wardrobe.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: {
         _count: {
           select: { clothingItems: true },

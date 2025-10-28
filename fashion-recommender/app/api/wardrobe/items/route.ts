@@ -10,14 +10,26 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('image') as File
     const wardrobeId = formData.get('wardrobeId') as string
-    const userId = formData.get('userId') as string
+    const userEmail = formData.get('userId') as string
     const name = formData.get('name') as string
     const category = formData.get('category') as string
 
-    if (!file || !wardrobeId || !userId || !name || !category) {
+    if (!file || !wardrobeId || !userEmail || !name || !category) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
+      )
+    }
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail },
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
       )
     }
 
@@ -25,27 +37,31 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Call AI backend to analyze clothing item
-    const aiBackendUrl = process.env.AI_BACKEND_URL || 'http://localhost:8000'
-    
-    const aiFormData = new FormData()
-    aiFormData.append('file', new Blob([buffer]), file.name)
-
-    const aiResponse = await fetch(`${aiBackendUrl}/api/analyze-clothing`, {
-      method: 'POST',
-      body: aiFormData,
-    })
-
+    // Try to call AI backend to analyze clothing item (optional)
     let aiAnalysis = null
-    if (aiResponse.ok) {
-      aiAnalysis = await aiResponse.json()
+    try {
+      const aiBackendUrl = process.env.AI_BACKEND_URL || 'http://localhost:8000'
+      
+      const aiFormData = new FormData()
+      aiFormData.append('file', new Blob([buffer]), file.name)
+
+      const aiResponse = await fetch(`${aiBackendUrl}/api/analyze-clothing`, {
+        method: 'POST',
+        body: aiFormData,
+      })
+
+      if (aiResponse.ok) {
+        aiAnalysis = await aiResponse.json()
+      }
+    } catch (error) {
+      console.log('AI backend not available, storing item without analysis')
     }
 
     // Store in database
     const clothingItem = await prisma.clothingItem.create({
       data: {
         wardrobeId,
-        userId,
+        userId: user.id,
         name,
         image: buffer,
         imageFilename: file.name,
@@ -105,8 +121,21 @@ export async function GET(request: NextRequest) {
     }
 
     const where: any = {}
-    if (wardrobeId) where.wardrobeId = wardrobeId
-    if (userId) where.userId = userId
+    
+    if (wardrobeId) {
+      where.wardrobeId = wardrobeId
+    } else if (userId) {
+      // Find user by email and get their items
+      const user = await prisma.user.findUnique({
+        where: { email: userId },
+      })
+      
+      if (user) {
+        where.userId = user.id
+      } else {
+        return NextResponse.json({ items: [] })
+      }
+    }
 
     const items = await prisma.clothingItem.findMany({
       where,

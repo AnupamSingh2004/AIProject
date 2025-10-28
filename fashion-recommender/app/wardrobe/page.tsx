@@ -1,37 +1,132 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Search, Filter, Grid, List, Trash2, Edit, Heart, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Filter, Grid, List, Trash2, Edit, Heart, X, Upload } from 'lucide-react';
+import Image from 'next/image';
 
-// Mock data for demonstration
-const mockItems = [
-  { id: 1, name: 'Blue Denim Jacket', category: 'Outerwear', color: '#4A90E2', season: 'Fall', image: '🧥' },
-  { id: 2, name: 'White T-Shirt', category: 'Tops', color: '#FFFFFF', season: 'All', image: '👕' },
-  { id: 3, name: 'Black Jeans', category: 'Bottoms', color: '#2C3E50', season: 'All', image: '👖' },
-  { id: 4, name: 'Red Dress', category: 'Dresses', color: '#E74C3C', season: 'Summer', image: '👗' },
-  { id: 5, name: 'Gray Sweater', category: 'Tops', color: '#95A5A6', season: 'Winter', image: '👚' },
-  { id: 6, name: 'Brown Boots', category: 'Shoes', color: '#8B4513', season: 'Fall', image: '👢' },
-  { id: 7, name: 'Green Blazer', category: 'Outerwear', color: '#27AE60', season: 'Spring', image: '🧥' },
-  { id: 8, name: 'Floral Skirt', category: 'Bottoms', color: '#F39C12', season: 'Spring', image: '👗' },
-];
+interface ClothingItem {
+  id: string;
+  name: string;
+  category: string;
+  clothingType: string | null;
+  dominantColorR: number | null;
+  dominantColorG: number | null;
+  dominantColorB: number | null;
+  style: string | null;
+  pattern: string | null;
+  season: string | null;
+  occasion: string | null;
+  createdAt: Date;
+}
 
-const categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Outerwear', 'Shoes', 'Accessories'];
+const categories = ['All', 'Topwear', 'Bottomwear', 'Dress', 'Footwear', 'Accessories'];
 const seasons = ['All', 'Spring', 'Summer', 'Fall', 'Winter'];
 const colors = ['All', 'Red', 'Blue', 'Green', 'Black', 'White', 'Gray', 'Brown'];
 
 export default function WardrobePage() {
-  const [items, setItems] = useState(mockItems);
+  const [items, setItems] = useState<ClothingItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedSeason, setSelectedSeason] = useState('All');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const filteredItems = items.filter((item) => {
+  // Fetch items from database
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      // Using demo user for now - you can add user authentication later
+      const response = await fetch('/api/wardrobe/items?userId=demo@example.com');
+      const data = await response.json();
+      setItems(data.items || []);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(files);
+  };
+
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) return;
+
+    setUploading(true);
+    try {
+      // Get or create default wardrobe
+      const wardrobeResponse = await fetch('/api/wardrobe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 'demo@example.com',
+          name: 'My Wardrobe',
+        }),
+      });
+      const wardrobeData = await wardrobeResponse.json();
+      const wardrobeId = wardrobeData.wardrobe?.id;
+
+      // Upload each file
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('wardrobeId', wardrobeId);
+        formData.append('userId', 'demo@example.com');
+        formData.append('name', file.name.replace(/\.[^/.]+$/, ''));
+        formData.append('category', 'Topwear'); // Default category
+
+        await fetch('/api/wardrobe/items', {
+          method: 'POST',
+          body: formData,
+        });
+      }
+
+      // Refresh items list
+      await fetchItems();
+      setShowUploadModal(false);
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error('Error uploading items:', error);
+      alert('Failed to upload items. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deleteItem = async (itemId: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
+    try {
+      await fetch(`/api/wardrobe/items/${itemId}`, {
+        method: 'DELETE',
+      });
+      await fetchItems();
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
+  const getColorHex = (item: ClothingItem): string => {
+    if (item.dominantColorR !== null && item.dominantColorG !== null && item.dominantColorB !== null) {
+      return `#${item.dominantColorR.toString(16).padStart(2, '0')}${item.dominantColorG.toString(16).padStart(2, '0')}${item.dominantColorB.toString(16).padStart(2, '0')}`;
+    }
+    return '#808080';
+  };
+
+  const filteredItems = items.filter((item: ClothingItem) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesSeason = selectedSeason === 'All' || item.season === selectedSeason || item.season === 'All';
+    const matchesSeason = selectedSeason === 'All' || item.season === selectedSeason || !item.season;
     return matchesSearch && matchesCategory && matchesSeason;
   });
 
@@ -157,7 +252,12 @@ export default function WardrobePage() {
         </div>
 
         {/* Items Grid/List */}
-        {filteredItems.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+            <p className="mt-4 text-muted">Loading your wardrobe...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 rounded-lg bg-surface flex items-center justify-center mx-auto mb-4">
               <Search className="h-8 w-8 text-muted" />
@@ -177,17 +277,22 @@ export default function WardrobePage() {
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid-responsive animate-fade-in">
-            {filteredItems.map((item) => (
+            {filteredItems.map((item: ClothingItem) => (
               <div
                 key={item.id}
                 className="card p-4 hover:shadow-theme-md transition-all"
               >
                 {/* Item Image */}
                 <div
-                  className="h-40 flex items-center justify-center text-5xl mb-4 rounded-lg"
-                  style={{ backgroundColor: item.color + '20' }}
+                  className="relative h-48 mb-4 rounded-lg overflow-hidden bg-surface"
                 >
-                  {item.image}
+                  <Image
+                    src={`/api/wardrobe/items/${item.id}/image`}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                 </div>
 
                 {/* Item Details */}
@@ -195,18 +300,22 @@ export default function WardrobePage() {
                   <h3 className="font-semibold text-lg text-foreground mb-2">{item.name}</h3>
                   <div className="flex items-center gap-2 mb-3 text-sm text-muted">
                     <span>{item.category}</span>
-                    <span>•</span>
-                    <span>{item.season}</span>
+                    {item.season && (
+                      <>
+                        <span>•</span>
+                        <span>{item.season}</span>
+                      </>
+                    )}
                   </div>
 
                   {/* Color Indicator */}
                   <div className="flex items-center gap-2 mb-4">
                     <div
                       className="w-6 h-6 rounded-full border-2 border-border"
-                      style={{ backgroundColor: item.color }}
+                      style={{ backgroundColor: getColorHex(item) }}
                     ></div>
                     <span className="text-xs text-muted font-mono">
-                      {item.color}
+                      {getColorHex(item)}
                     </span>
                   </div>
 
@@ -219,7 +328,10 @@ export default function WardrobePage() {
                     <button className="btn btn-ghost btn-sm">
                       <Edit className="h-4 w-4" />
                     </button>
-                    <button className="btn btn-ghost btn-sm hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30">
+                    <button 
+                      onClick={() => deleteItem(item.id)}
+                      className="btn btn-ghost btn-sm hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30"
+                    >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
@@ -229,17 +341,20 @@ export default function WardrobePage() {
           </div>
         ) : (
           <div className="space-y-3 animate-fade-in">
-            {filteredItems.map((item) => (
+            {filteredItems.map((item: ClothingItem) => (
               <div
                 key={item.id}
                 className="card p-4 flex items-center gap-4 hover:shadow-theme-md transition-all"
               >
                 {/* Item Preview */}
-                <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ backgroundColor: item.color + '20' }}
-                >
-                  {item.image}
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface flex-shrink-0">
+                  <Image
+                    src={`/api/wardrobe/items/${item.id}/image`}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                 </div>
 
                 {/* Item Details */}
@@ -247,15 +362,19 @@ export default function WardrobePage() {
                   <h3 className="font-semibold text-lg text-foreground mb-1">{item.name}</h3>
                   <div className="flex items-center gap-2 text-sm text-muted">
                     <span>{item.category}</span>
-                    <span>•</span>
-                    <span>{item.season}</span>
+                    {item.season && (
+                      <>
+                        <span>•</span>
+                        <span>{item.season}</span>
+                      </>
+                    )}
                     <span>•</span>
                     <div className="flex items-center gap-1">
                       <div
                         className="w-4 h-4 rounded-full border border-border"
-                        style={{ backgroundColor: item.color }}
+                        style={{ backgroundColor: getColorHex(item) }}
                       ></div>
-                      <span className="text-xs font-mono">{item.color}</span>
+                      <span className="text-xs font-mono">{getColorHex(item)}</span>
                     </div>
                   </div>
                 </div>
@@ -269,7 +388,10 @@ export default function WardrobePage() {
                   <button className="btn-ghost p-2">
                     <Edit className="h-4 w-4" />
                   </button>
-                  <button className="btn-ghost p-2 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30">
+                  <button 
+                    onClick={() => deleteItem(item.id)}
+                    className="btn-ghost p-2 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -285,7 +407,10 @@ export default function WardrobePage() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-foreground">Add New Items</h2>
                 <button
-                  onClick={() => setShowUploadModal(false)}
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setSelectedFiles([]);
+                  }}
                   className="btn-ghost p-2"
                 >
                   <X className="h-5 w-5" />
@@ -293,24 +418,47 @@ export default function WardrobePage() {
               </div>
 
               <div className="border-2 border-dashed border-primary-300 dark:border-primary-600 rounded-lg p-8 text-center mb-6 cursor-pointer hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-950/20 transition-all">
-                <Plus className="h-10 w-10 text-primary-600 mx-auto mb-3" />
-                <p className="font-medium text-foreground mb-1">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-sm text-muted">
-                  PNG, JPG up to 10MB (Multiple files supported)
-                </p>
+                <input
+                  type="file"
+                  id="file-upload"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <Upload className="h-10 w-10 text-primary-600 mx-auto mb-3" />
+                  <p className="font-medium text-foreground mb-1">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-sm text-muted">
+                    PNG, JPG up to 10MB (Multiple files supported)
+                  </p>
+                  {selectedFiles.length > 0 && (
+                    <p className="text-sm text-primary-600 mt-2 font-medium">
+                      {selectedFiles.length} file(s) selected
+                    </p>
+                  )}
+                </label>
               </div>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowUploadModal(false)}
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setSelectedFiles([]);
+                  }}
                   className="flex-1 btn-ghost"
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
-                <button className="flex-1 btn-primary">
-                  Upload Items
+                <button 
+                  onClick={handleUpload}
+                  className="flex-1 btn-primary"
+                  disabled={uploading || selectedFiles.length === 0}
+                >
+                  {uploading ? 'Uploading...' : 'Upload Items'}
                 </button>
               </div>
             </div>
