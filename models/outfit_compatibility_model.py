@@ -335,6 +335,11 @@ class OutfitCompatibilityModel:
         print(f"✅ Model loaded from {model_path}")
 
 
+def build_compatibility_model(img_size: Tuple[int, int] = (224, 224)) -> keras.Model:
+    """Helper function to build and return the compatibility model."""
+    model_instance = OutfitCompatibilityModel(feature_dim=128)
+    return model_instance.build_compatibility_model(img_size)
+
 def main():
     """Main training script for outfit compatibility model."""
     print("=" * 70)
