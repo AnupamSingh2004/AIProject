@@ -1,16 +1,49 @@
-# 👗 AI Fashion Recommendation System
+# 🎨 AI Fashion Recommender - Complete System
 
-An intelligent **deep learning-powered** fashion recommendation system that uses computer vision to analyze clothing patterns, extract RGB colors from images, and suggest complete outfit combinations (Top + Bottom + Shoes) using a trained Siamese CNN model with 2.7M parameters.
+An intelligent **full-stack AI-powered** fashion recommendation system with:
+- 🧠 **Deep Learning Models** (95%+ accuracy clothing classification)
+- 🌐 **Next.js Frontend** with modern UI
+- ⚡ **FastAPI Backend** with real-time inference
+- 🗄️ **PostgreSQL Database** for wardrobe management
+- 🎮 **GPU Acceleration** (NVIDIA CUDA support)
 
-![Python](https://img.shields.io/badge/Python-3.10-blue)
+![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20-orange)
-![OpenCV](https://img.shields.io/badge/OpenCV-4.12-green)
+![Next.js](https://img.shields.io/badge/Next.js-15.5-black)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
 ![GPU](https://img.shields.io/badge/GPU-CUDA%2012.x-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+---
+
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Quick Start](#-quick-start-3-simple-steps)
+- [System Architecture](#-system-architecture)
+- [Installation](#-installation)
+- [How to Run](#-how-to-run)
+- [Usage Guide](#-usage-guide)
+- [API Documentation](#-api-documentation)
+- [Technical Details](#-technical-details)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+
+---
+
 ## 🌟 Features
 
-### **Core AI Models**
+### **🎯 Complete Full-Stack Application**
+
+- ✅ **Web Application** - Modern Next.js 15 frontend with responsive design
+- ✅ **RESTful API** - FastAPI backend with automatic documentation
+- ✅ **Database Integration** - PostgreSQL for persistent wardrobe storage
+- ✅ **Image Storage** - BYTEA storage for clothing images
+- ✅ **Real-time Processing** - Live AI inference on uploaded images
+- ✅ **User Management** - Multi-user wardrobe support
+- ✅ **Docker Support** - Containerized database deployment
+
+### **🧠 Core AI Models**
 
 1. **🧠 Clothing Classifier (95.48% Accuracy)**
    - **Architecture**: MobileNetV2 transfer learning (2.6M parameters)
@@ -55,247 +88,350 @@ An intelligent **deep learning-powered** fashion recommendation system that uses
   - Brightness balance: 10-20%
 - **👗 Dress Support**: Special handling for one-piece dresses with footwear pairing
 
-## 📋 Table of Contents
+---
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [How It Works](#how-it-works)
-- [API Reference](#api-reference)
-- [Dataset](#dataset)
-- [Contributing](#contributing)
-- [License](#license)
+## � Quick Start (3 Simple Steps)
 
-## 🚀 Installation
+### **Prerequisites**
+- Windows 10/11
+- Docker Desktop installed and running
+- Node.js 18+ installed
+- Python 3.13 installed
 
-### Prerequisites
-
-- Python 3.10+
-- Conda (Miniconda or Anaconda)
-- Kaggle Account (optional, for dataset)
-- GPU (recommended but not required)
-
-### Quick Start (Automated)
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/AnupamSingh2004/AIProject.git
-cd AIProject
-
-# 2. Run the quickstart script
-./quickstart.sh
-```
-
-The quickstart script provides an interactive menu for:
-- Downloading the dataset
-- Installing dependencies
-- Training models
-- Running the demo app
-
-### Manual Installation
-
-#### Step 1: Clone the Repository
-
-```bash
+### **Step 1: Clone Repository**
+```powershell
 git clone https://github.com/AnupamSingh2004/AIProject.git
 cd AIProject
 ```
 
-#### Step 2: Create Conda Environment
+### **Step 2: Install Dependencies**
+```powershell
+# Install Python packages
+pip install tensorflow keras numpy pillow fastapi uvicorn python-multipart
 
-```bash
-conda create -n AI python=3.10 -y
-conda activate AI
+# Install GPU support (optional for 6x speed boost)
+pip install nvidia-cudnn-cu12 nvidia-cublas-cu12
+
+# Install frontend dependencies
+cd fashion-recommender
+npm install
+cd ..
 ```
 
-#### Step 3: Install Dependencies
+### **Step 3: Start Everything**
+```powershell
+# Option A: One-Click Start (Automated)
+.\start_all.bat
 
-```bash
-pip install -r requirements.txt
+# Option B: Manual Start (3 Terminals)
+# Terminal 1: Database
+docker-compose up -d
+
+# Terminal 2: Backend
+cd backend
+python start_backend.py
+
+# Terminal 3: Frontend
+cd fashion-recommender
+npm run dev
 ```
 
-Or install packages individually:
+**🎉 Done!** Open http://localhost:3000 in your browser!
 
-```bash
-pip install tensorflow opencv-python mediapipe Pillow scikit-image colorthief scikit-learn pandas matplotlib seaborn tqdm pyyaml requests streamlit kaggle python-dotenv
+---
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    USER INTERFACE                           │
+│              Next.js Frontend (Port 3000)                   │
+│  • Wardrobe Management  • Image Upload  • AI Results       │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ↓ REST API Calls
+┌─────────────────────────────────────────────────────────────┐
+│                   BACKEND API                               │
+│              FastAPI Server (Port 8000)                     │
+│  • /api/analyze-clothing  • /api/analyze-skin-tone         │
+│  • Model Inference  • GPU Acceleration  • Image Processing │
+└─────────┬──────────────────────────┬────────────────────────┘
+          │                          │
+          ↓ SQL Queries              ↓ Model Predictions
+┌─────────────────────┐    ┌──────────────────────────────────┐
+│    DATABASE         │    │      AI MODELS                   │
+│  PostgreSQL (5432)  │    │  • Clothing Classifier (22.5MB)  │
+│  • Users            │    │  • Outfit Compatibility (19.6MB) │
+│  • Clothing Items   │    │  • GPU/CPU Inference             │
+│  • Wardrobes        │    │  • Real-time Processing          │
+│  • Image Storage    │    └──────────────────────────────────┘
+└─────────────────────┘
 ```
 
-#### Step 4: Verify Setup
+---
 
+## � Installation
+
+### **Complete Installation Guide**
+
+#### **Step 1: System Requirements**
+- **OS**: Windows 10/11, Linux, or macOS
+- **RAM**: 8GB minimum (16GB recommended)
+- **Storage**: 5GB free space
+- **GPU**: NVIDIA GPU optional (RTX 3050 or better for acceleration)
+
+#### **Step 2: Install Prerequisites**
+
+**Docker Desktop:**
+1. Download from https://www.docker.com/products/docker-desktop
+2. Install and start Docker Desktop
+3. Verify: `docker --version`
+
+**Node.js:**
+1. Download from https://nodejs.org (v18 or later)
+2. Install with npm included
+3. Verify: `node --version && npm --version`
+
+**Python:**
+1. Download from https://www.python.org (v3.10+)
+2. Install and add to PATH
+3. Verify: `python --version`
+
+#### **Step 3: Clone Repository**
 ```bash
-python verify_setup.py
+git clone https://github.com/AnupamSingh2004/AIProject.git
+cd AIProject
 ```
 
-This will check that everything is properly configured.
+#### **Step 4: Install Python Dependencies**
+```powershell
+# Core packages
+pip install tensorflow==2.20.0 keras==3.12.0
 
-#### Step 5: Download Dataset
+# Backend packages
+pip install fastapi uvicorn python-multipart pillow numpy
 
-**Option A: Using Kaggle API (Recommended)**
-
-1. Create a Kaggle account at https://www.kaggle.com
-2. Go to https://www.kaggle.com/settings/account
-3. Click "Create New API Token" under API section
-4. Place `kaggle.json` at `~/.kaggle/kaggle.json`
-5. Run:
-
-```bash
-chmod 600 ~/.kaggle/kaggle.json
-python scripts/download_dataset.py
+# GPU support (optional, for 6x speedup)
+pip install nvidia-cudnn-cu12 nvidia-cublas-cu12
 ```
 
-**Option B: Manual Download**
-
-1. Download from: https://www.kaggle.com/datasets/paramaggarwal/fashion-product-images-dataset
-2. Extract to `data/raw/` directory
-
-#### Step 6: Preprocess Data
-
-```bash
-python scripts/preprocess_data.py --data_dir data/raw --output_dir data/processed --img_size 224
+#### **Step 5: Install Frontend Dependencies**
+```powershell
+cd fashion-recommender
+npm install
+cd ..
 ```
 
-This creates train/val/test splits and prepares the data for training.
-
-#### Step 7: Train Models
-
-**Option A: Full Pipeline (Recommended)**
-
-```bash
-python train.py
+#### **Step 6: Configure Database**
+```powershell
+# Create .env file in fashion-recommender folder
+cd fashion-recommender
+echo 'DATABASE_URL="postgresql://fashion_user:fashion_password_2024@localhost:5432/fashion_recommender"' > .env
+echo 'AI_BACKEND_URL="http://localhost:8000"' >> .env
+cd ..
 ```
 
-This trains both models automatically.
-
-**Option B: Individual Models**
-
-```bash
-# Train clothing classifier only
-python train_classifier_simple.py
-
-# Train advanced outfit compatibility model (3-input Siamese CNN)
-python train_compatibility_advanced.py
+#### **Step 7: Verify Installation**
+```powershell
+python quick_test.py
 ```
 
-**Training Output** (Compatibility Model):
-- Creates: `models/saved_models/outfit_compatibility_advanced.keras` (21 MB)
-- History: `models/saved_models/compatibility_advanced_history.json`
-- Training time: ~13 minutes on RTX 3050 GPU
-- Expected metrics: 78% accuracy, 88% AUC
+---
 
-For detailed training instructions, see [TRAINING.md](TRAINING.md)
+## 🎮 How to Run
 
-## 🎯 Quick Start
+### **Method 1: One-Click Start (Recommended)**
 
-### Run the Streamlit App
-
-```bash
-conda activate AI
-cd app
-streamlit run streamlit_app.py
+```powershell
+.\start_all.bat
 ```
 
-Then open your browser to `http://localhost:8501`
+This automatically:
+1. Starts PostgreSQL database in Docker
+2. Starts FastAPI backend with AI models
+3. Starts Next.js frontend
+4. Opens browser at http://localhost:3000
 
-### Using the Application
+**Wait 15-20 seconds** for all services to initialize.
 
-1. **Upload Your Photo** (Tab 1)
-   - Upload a clear face photo
-   - Click "Analyze Skin Tone"
-   - View your Fitzpatrick type, undertone, and recommended colors
+---
 
-2. **Build Your Wardrobe** (Tab 2)
-   - Upload clothing item images
-   - Select clothing type
-   - Add items to your virtual wardrobe
+### **Method 2: Manual Start (Step-by-Step)**
 
-3. **Get Recommendations** (Tab 3)
-   - Select occasion (Casual, Formal, Party, etc.)
-   - Choose current season
-   - Click "Generate Recommendations"
-   - View personalized outfit suggestions!
+#### **Terminal 1: Start Database**
+```powershell
+cd C:\Users\Prachi\Desktop\qq\AIProject
+docker-compose up -d
 
-## 📖 Usage
+# Verify database is running
+docker ps
+```
 
-### Python API
+**Expected Output:**
+```
+CONTAINER ID   IMAGE          STATUS         PORTS                    NAMES
+xxxxx          postgres:16    Up X seconds   0.0.0.0:5432->5432/tcp   fashion_recommender_db
+```
 
-#### Analyze Skin Tone
+#### **Terminal 2: Start Backend API**
+```powershell
+cd C:\Users\Prachi\Desktop\qq\AIProject\backend
+python start_backend.py
+```
 
+**Expected Output:**
+```
+======================================================================
+👕 Fashion AI Backend Server
+======================================================================
+Starting server at http://localhost:8000
+API docs at http://localhost:8000/docs
+
+🚀 Loading AI Models...
+📦 Loading Clothing Classifier...
+✅ Loaded successfully!
+   Layers: 7
+   Input: (None, 224, 224, 3)
+   Output: (None, 6)
+
+✅ Backend Ready!
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+#### **Terminal 3: Start Frontend**
+```powershell
+cd C:\Users\Prachi\Desktop\qq\AIProject\fashion-recommender
+npm run dev
+```
+
+**Expected Output:**
+```
+  ▲ Next.js 15.5.4
+  - Local:        http://localhost:3000
+  - Turbopack (beta) enabled
+
+ ✓ Starting...
+ ✓ Ready in 2.3s
+```
+
+#### **Step 4: Open Application**
+Visit: **http://localhost:3000**
+
+---
+
+## 📖 Usage Guide
+
+### **1. Upload Clothing Items**
+
+1. **Navigate to Wardrobe**
+   - Open http://localhost:3000/wardrobe
+   - Click "Upload New Item" button
+
+2. **Select Image**
+   - Choose a clear clothing image (JPG/PNG)
+   - Recommended: Plain background, good lighting
+
+3. **Add Details**
+   - Category (automatically detected by AI)
+   - Color name
+   - User email
+
+4. **Upload**
+   - Click "Upload" button
+   - AI analyzes image in real-time
+   - Item saved to database
+
+### **2. View Your Wardrobe**
+
+- **All Items**: View all uploaded clothing
+- **Filter by Category**: Tops, Bottoms, Shoes, Dresses
+- **Image Display**: Click to view full size
+- **Delete Items**: Remove unwanted items
+
+### **3. Get AI Recommendations**
+
+1. **Select Occasion**: Casual, Formal, Party, Sports
+2. **Choose Season**: Spring, Summer, Autumn, Winter
+3. **Click "Recommend"**
+4. **View Results**:
+   - Complete outfits (Top + Bottom + Shoes)
+   - Compatibility scores
+   - Color harmony analysis
+   - Style matching reasons
+
+### **4. Test AI Analysis**
+
+**Via API Documentation:**
+1. Visit http://localhost:8000/docs
+2. Try `/api/test-model` endpoint
+3. Upload image to `/api/analyze-clothing`
+4. See real-time classification results
+
+**Via Python:**
 ```python
-from src.skin_tone_analyzer import SkinToneAnalyzer
+import requests
 
-analyzer = SkinToneAnalyzer()
-result = analyzer.analyze('path/to/your/photo.jpg')
+# Analyze clothing image
+with open('shirt.jpg', 'rb') as f:
+    response = requests.post(
+        'http://localhost:8000/api/analyze-clothing',
+        files={'file': f}
+    )
 
-print(f"Fitzpatrick Type: {result.fitzpatrick_type.name}")
-print(f"Undertone: {result.undertone.value}")
-print(f"Dominant Color: {result.dominant_color_hex}")
+result = response.json()
+print(f"Category: {result['category']}")
+print(f"Confidence: {result['confidence']:.2%}")
+print(f"Colors: {result['colors']}")
 ```
 
-#### Detect Clothing
+---
 
-```python
-from src.clothing_detector import ClothingDetector, ClothingType
+## 🔌 API Documentation
 
-detector = ClothingDetector()
-item = detector.detect(
-    'path/to/clothing.jpg',
-    clothing_type=ClothingType.SHIRT
-)
+### **Backend Endpoints (http://localhost:8000)**
 
-print(f"Dominant Color: {item.dominant_color_hex()}")
-print(f"Pattern: {item.pattern.value}")
-print(f"Style: {item.style.value}")
+| Endpoint | Method | Description | Example |
+|----------|--------|-------------|---------|
+| `/api/test-model` | GET | Test model status | `curl http://localhost:8000/api/test-model` |
+| `/api/analyze-clothing` | POST | Classify clothing image | Upload image file |
+| `/api/analyze-skin-tone` | POST | Analyze skin tone | Upload face photo |
+| `/docs` | GET | Interactive API docs | View in browser |
+
+### **Frontend API Routes (http://localhost:3000)**
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/wardrobe/items` | GET | Get all wardrobe items |
+| `/api/wardrobe/items` | POST | Upload new clothing |
+| `/api/wardrobe/items/[id]` | GET | Get single item |
+| `/api/wardrobe/items/[id]` | DELETE | Delete item |
+| `/api/wardrobe/items/[id]/image` | GET | Get item image |
+
+### **Example API Calls**
+
+**Upload Clothing:**
+```javascript
+const formData = new FormData();
+formData.append('userId', 'user@example.com');
+formData.append('category', 'tops');
+formData.append('color', 'blue');
+formData.append('image', fileBlob);
+
+await fetch('/api/wardrobe/items', {
+  method: 'POST',
+  body: formData
+});
 ```
 
-#### Get Outfit Recommendations
-
-```python
-from src.recommendation_engine import RecommendationEngine, Occasion, Season
-
-recommender = RecommendationEngine()
-
-recommendations = recommender.recommend_outfits(
-    skin_tone=skin_tone_result,
-    wardrobe=clothing_items,
-    occasion=Occasion.PARTY,
-    season=Season.SUMMER,
-    count=5
-)
-
-for i, outfit in enumerate(recommendations, 1):
-    print(f"\nOutfit #{i} (Score: {outfit.compatibility_score:.2%})")
-    print(f"Top: {outfit.top.item_type.value}")
-    print(f"Bottom: {outfit.bottom.item_type.value}")
-    print(f"Reason: {outfit.reason}")
+**Get All Items:**
+```javascript
+const response = await fetch('/api/wardrobe/items?userId=user@example.com');
+const items = await response.json();
 ```
 
-## 📁 Project Structure
+---
 
-```
-AIProject/
-├── app/
-│   └── streamlit_app.py          # Streamlit web application
-├── data/
-│   ├── raw/                       # Original Kaggle dataset
-│   ├── processed/                 # Processed data
-│   └── user_uploads/              # User uploaded images
-├── models/
-│   └── saved_models/              # Trained model weights
-├── notebooks/                     # Jupyter notebooks for experiments
-├── scripts/
-│   └── download_dataset.py        # Dataset download script
-├── src/
-│   ├── skin_tone_analyzer.py      # Skin tone detection module
-│   ├── clothing_detector.py       # Clothing detection module
-│   ├── color_analyzer.py          # Color theory engine
-│   └── recommendation_engine.py   # Main recommendation system
-├── requirements.txt               # Python dependencies
-├── README.md                      # This file
-└── details.md                     # Detailed project requirements
-```
-
-## 🔬 How It Works
+## 🔬 Technical Details
 
 ### **System Architecture & Pipeline**
 
@@ -1321,6 +1457,224 @@ The system provides season-specific color recommendations:
 - **Summer**: Powder blue, lavender, cool gray, light pink
 - **Autumn**: Brown, sienna, goldenrod, olive
 - **Winter**: Black, white, crimson, midnight blue, purple
+
+---
+
+## 🌐 System URLs
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| **Frontend** | http://localhost:3000 | Main web application |
+| **Backend API** | http://localhost:8000 | FastAPI REST API |
+| **API Docs** | http://localhost:8000/docs | Interactive Swagger UI |
+| **Database** | localhost:5432 | PostgreSQL (internal) |
+
+**User Pages:**
+- Home: http://localhost:3000
+- Wardrobe: http://localhost:3000/wardrobe
+- Recommendations: http://localhost:3000/recommendations
+- Profile: http://localhost:3000/profile
+- Mix & Match: http://localhost:3000/mix-match
+- Analyze: http://localhost:3000/analyze
+
+---
+
+## 🛠️ Troubleshooting
+
+### **Problem: Database Connection Failed**
+
+**Error:**
+```
+Error: P1001: Can't reach database server at localhost:5432
+```
+
+**Solution:**
+```powershell
+# Check if Docker Desktop is running
+docker ps
+
+# Restart database container
+docker-compose restart
+
+# If container doesn't exist
+docker-compose up -d
+
+# Verify container is healthy
+docker logs fashion_recommender_db
+```
+
+---
+
+### **Problem: Backend Model Not Loading**
+
+**Error:**
+```
+FileNotFoundError: [Errno 2] No such file or directory: 'models/saved_models/clothing_classifier.keras'
+```
+
+**Solution:**
+```powershell
+# Check if model files exist
+dir models\saved_models\*.keras
+
+# If files missing, download pre-trained models
+# Contact repository maintainer or train models yourself
+python train.py
+```
+
+---
+
+### **Problem: Frontend Build Error**
+
+**Error:**
+```
+Error: Cannot find module 'next'
+```
+
+**Solution:**
+```powershell
+cd fashion-recommender
+Remove-Item -Recurse -Force node_modules, .next
+npm install
+npm run dev
+```
+
+---
+
+### **Problem: TensorFlow GPU Not Working**
+
+**Symptoms:**
+```
+Could not load library cudnn_ops_infer64_8.dll
+```
+
+**Solution:**
+
+**Option 1: Continue with CPU (recommended)**
+- Project works perfectly on CPU
+- No action needed
+- Performance: ~3 seconds per image
+
+**Option 2: Enable GPU (optional, 6x faster)**
+1. Download CUDA Toolkit 12.0: https://developer.nvidia.com/cuda-downloads
+2. Install with default settings
+3. Restart terminal
+4. Test GPU:
+```powershell
+python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+```
+
+**Expected Output (GPU working):**
+```
+[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+```
+
+---
+
+### **Problem: Port Already in Use**
+
+**Error:**
+```
+Error: listen EADDRINUSE: address already in use :::3000
+```
+
+**Solution:**
+```powershell
+# Find process using port 3000
+netstat -ano | findstr :3000
+
+# Kill the process (replace PID with actual number)
+taskkill /PID <PID> /F
+
+# Or change port in package.json
+# Edit fashion-recommender/package.json:
+# "dev": "next dev -p 3001"
+```
+
+---
+
+### **Problem: Image Upload Fails**
+
+**Error:**
+```
+413 Payload Too Large
+```
+
+**Solution:**
+
+Edit `backend/main.py`:
+```python
+app = FastAPI()
+
+# Add this line to increase file upload limit
+app.add_middleware(
+    SizeLimitMiddleware, 
+    max_upload_size=10*1024*1024  # 10MB
+)
+```
+
+Or resize images before uploading (recommended):
+```python
+from PIL import Image
+
+img = Image.open('large_photo.jpg')
+img.thumbnail((1920, 1080))
+img.save('resized_photo.jpg')
+```
+
+---
+
+### **Problem: Slow Performance**
+
+**Symptoms:**
+- Image analysis takes >10 seconds
+- UI freezes during upload
+- API timeouts
+
+**Solutions:**
+
+1. **Enable GPU** (see GPU setup above)
+2. **Reduce image size before upload:**
+   ```python
+   from PIL import Image
+   img = Image.open('photo.jpg')
+   img.thumbnail((800, 800))
+   img.save('smaller_photo.jpg')
+   ```
+
+3. **Close unnecessary applications** to free RAM
+
+4. **Check system resources:**
+   ```powershell
+   # CPU and Memory usage
+   Get-Process -Name python, node | Select-Object Name, CPU, WS
+   ```
+
+---
+
+### **Problem: Database Data Disappeared**
+
+**Cause:** Docker container was removed (not just stopped)
+
+**Recovery:**
+```powershell
+# Check if volume still exists
+docker volume ls | findstr fashion
+
+# If volume exists, recreate container
+docker-compose up -d
+
+# If volume missing, data is lost. Restart fresh:
+docker-compose down -v
+docker-compose up -d
+
+# Reupload wardrobe items
+```
+
+**Prevention:**
+Always use `docker-compose stop` instead of `docker-compose down -v`
+
+---
 
 ## 📊 API Reference
 
