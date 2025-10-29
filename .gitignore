@@ -41,7 +41,7 @@ conda/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
+# *.ipynb  # ENABLED: Jupyter notebooks can now be committed to Git
 
 # PyCharm
 .idea/
