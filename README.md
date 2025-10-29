@@ -119,11 +119,27 @@ cd ..
 ```
 
 ### **Step 3: Start Everything**
+
+**Windows:**
 ```powershell
-# Option A: One-Click Start (Automated)
+# One-Click Start
 .\start_all.bat
 
-# Option B: Manual Start (3 Terminals)
+# Stop All Services
+.\stop_all.bat
+```
+
+**Linux/Mac:**
+```bash
+# One-Click Start
+./start_all.sh
+
+# Stop All Services
+./stop_all.sh
+```
+
+**Manual Start (Any OS - 3 Terminals):**
+```bash
 # Terminal 1: Database
 docker-compose up -d
 
@@ -242,8 +258,14 @@ python quick_test.py
 
 ### **Method 1: One-Click Start (Recommended)**
 
+**Windows:**
 ```powershell
 .\start_all.bat
+```
+
+**Linux/Mac:**
+```bash
+./start_all.sh
 ```
 
 This automatically:
@@ -253,6 +275,10 @@ This automatically:
 4. Opens browser at http://localhost:3000
 
 **Wait 15-20 seconds** for all services to initialize.
+
+**To Stop All Services:**
+- Windows: `.\stop_all.bat`
+- Linux/Mac: `./stop_all.sh`
 
 ---
 
@@ -1675,7 +1701,6 @@ docker-compose up -d
 Always use `docker-compose stop` instead of `docker-compose down -v`
 
 ---
-
 ## 📊 API Reference
 
 ### SkinToneAnalyzer

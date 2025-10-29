@@ -243,41 +243,106 @@ async def analyze_skin_tone(photo: UploadFile = File(...)):
 async def analyze_clothing(file: UploadFile = File(...)):
     """Analyze clothing item from uploaded image."""
     try:
-        # Read and save image temporarily
+        # Read and convert image
         image_bytes = await file.read()
-        temp_path = "/tmp/temp_clothing.jpg"
+        image = Image.open(io.BytesIO(image_bytes))
+        image = image.convert('RGB')
         
-        with open(temp_path, "wb") as f:
-            f.write(image_bytes)
+        # Resize for classifier
+        img_array = np.array(image.resize((224, 224)))
+        img_array = img_array.astype('float32') / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
         
-        # Detect clothing using detector
-        if clothing_detector is None:
-            raise HTTPException(status_code=503, detail="Clothing detector not available")
+        # Classify using trained model
+        if clothing_classifier is None:
+            raise HTTPException(status_code=503, detail="Clothing classifier not available")
         
-        clothing_item = clothing_detector.detect(temp_path)
+        predictions = clothing_classifier.predict(img_array, verbose=0)
+        predicted_class = int(np.argmax(predictions[0]))
+        confidence = float(predictions[0][predicted_class])
         
-        # Prepare response
-        secondary_colors = [
-            {"r": c[0], "g": c[1], "b": c[2]}
-            for c in clothing_item.color_palette[1:4]  # Get up to 3 secondary colors
-        ]
+        # Map prediction to category
+        category_names = ['Accessories', 'Bottomwear', 'Dress', 'Footwear', 'Other', 'Topwear']
+        if label_mapping:
+            # Use label mapping if available
+            category_name = next((k for k, v in label_mapping.items() if v == predicted_class), 'Other')
+        else:
+            category_name = category_names[predicted_class] if predicted_class < len(category_names) else 'Other'
+        
+        # Extract colors using K-means
+        img_resized = image.resize((100, 100))  # Smaller for faster processing
+        img_np = np.array(img_resized)
+        pixels = img_np.reshape(-1, 3)
+        
+        # K-means clustering for dominant colors
+        from sklearn.cluster import KMeans
+        kmeans = KMeans(n_clusters=min(4, len(pixels)), random_state=42, n_init=10)
+        kmeans.fit(pixels)
+        
+        colors = kmeans.cluster_centers_.astype(int)
+        dominant_color = colors[0]
+        secondary_colors = [{"r": int(c[0]), "g": int(c[1]), "b": int(c[2])} for c in colors[1:4]]
+        
+        # Detect pattern using edge detection
+        gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+        edges = cv2.Canny(gray, 50, 150)
+        edge_density = np.sum(edges > 0) / edges.size
+        
+        # Simple pattern classification
+        if edge_density < 0.05:
+            pattern = "solid"
+        elif edge_density > 0.20:
+            pattern = "textured"
+        else:
+            # Check for lines
+            lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=30, minLineLength=20, maxLineGap=5)
+            if lines is not None and len(lines) > 10:
+                # Analyze line directions
+                angles = []
+                for line in lines[:20]:
+                    x1, y1, x2, y2 = line[0]
+                    angle = np.abs(np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi)
+                    angles.append(angle)
+                
+                horizontal = sum(1 for a in angles if a < 15 or a > 165)
+                vertical = sum(1 for a in angles if 75 < a < 105)
+                
+                if horizontal > len(angles) * 0.6:
+                    pattern = "striped_horizontal"
+                elif vertical > len(angles) * 0.6:
+                    pattern = "striped_vertical"
+                else:
+                    pattern = "checkered"
+            else:
+                pattern = "solid"
+        
+        # Determine style based on category and colors
+        brightness = np.mean(img_np)
+        if brightness > 200:
+            style = "casual"
+        elif brightness < 80:
+            style = "formal"
+        else:
+            style = "casual"
         
         return ClothingAnalysisResponse(
-            clothing_type=clothing_item.item_type.value,
+            clothing_type=category_name,
             dominant_color={
-                "r": clothing_item.dominant_color[0],
-                "g": clothing_item.dominant_color[1],
-                "b": clothing_item.dominant_color[2]
+                "r": int(dominant_color[0]),
+                "g": int(dominant_color[1]),
+                "b": int(dominant_color[2])
             },
             secondary_colors=secondary_colors,
-            pattern=clothing_item.pattern.value,
-            style=clothing_item.style.value,
-            confidence=clothing_item.confidence
+            pattern=pattern,
+            style=style,
+            confidence=confidence
         )
     except HTTPException:
         raise
     except Exception as e:
         print(f"Error in clothing analysis: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @app.post("/api/recommend-outfits", response_model=OutfitRecommendationResponse)
