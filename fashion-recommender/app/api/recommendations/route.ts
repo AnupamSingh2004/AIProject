@@ -62,13 +62,13 @@ export async function POST(request: NextRequest) {
             b: skinTone.dominantColorB,
           },
         } : null,
-        wardrobe: clothingItems.map((item: ClothingItem) => ({
+        clothingItems: clothingItems.map((item: ClothingItem) => ({
           id: item.id,
           category: item.category,
           dominant_color: {
-            r: item.dominantColorR,
-            g: item.dominantColorG,
-            b: item.dominantColorB,
+            r: item.dominantColorR || 128,
+            g: item.dominantColorG || 128,
+            b: item.dominantColorB || 128,
           },
           style: item.style,
           pattern: item.pattern,
@@ -83,25 +83,49 @@ export async function POST(request: NextRequest) {
       throw new Error('AI recommendation failed')
     }
 
-    const recommendations = await aiResponse.json()
+    const aiData = await aiResponse.json()
 
     // Save recommendations to database
     const savedRecommendations = await Promise.all(
-      recommendations.outfits.map(async (outfit: AIOutfit) => {
+      aiData.outfits.map(async (outfitItemIds: string[], index: number) => {
+        const score = aiData.scores[index] || 0.5
+        
+        // Map item IDs to their types
+        const items = clothingItems.filter((item: ClothingItem) => 
+          outfitItemIds.includes(item.id)
+        )
+        
+        let topId = null, bottomId = null, shoesId = null, accessoriesId = null
+        
+        for (const item of items) {
+          const category = item.category?.toLowerCase() || ''
+          if (category.includes('top') || category.includes('shirt') || category.includes('blouse')) {
+            topId = item.id
+          } else if (category.includes('bottom') || category.includes('pants') || category.includes('jeans') || category.includes('skirt')) {
+            bottomId = item.id
+          } else if (category.includes('dress')) {
+            topId = item.id  // Use top field for dresses
+          } else if (category.includes('footwear') || category.includes('shoe')) {
+            shoesId = item.id
+          } else if (category.includes('accessories')) {
+            accessoriesId = item.id
+          }
+        }
+        
         return await prisma.outfitRecommendation.create({
           data: {
             userId,
             skinToneAnalysisId: skinToneAnalysisId || null,
-            topItemId: outfit.top_id || null,
-            bottomItemId: outfit.bottom_id || null,
-            shoesItemId: outfit.shoes_id || null,
-            accessoriesItemId: outfit.accessories_id || null,
+            topItemId: topId,
+            bottomItemId: bottomId,
+            shoesItemId: shoesId,
+            accessoriesItemId: accessoriesId,
             occasion: occasion || 'Casual',
             season: season || null,
-            compatibilityScore: outfit.compatibility_score,
-            skinToneMatchScore: outfit.skin_tone_match_score,
-            colorHarmonyType: outfit.color_harmony_type,
-            reason: outfit.reason,
+            compatibilityScore: score,
+            skinToneMatchScore: null,
+            colorHarmonyType: null,
+            reason: null,
           },
         })
       })

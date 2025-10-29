@@ -35,6 +35,17 @@ export default function WardrobePage() {
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
+  // Get or create userId
+  const getUserId = () => {
+    if (typeof window === 'undefined') return null;
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      userId = crypto.randomUUID();
+      localStorage.setItem('userId', userId);
+    }
+    return userId;
+  };
+
   // Fetch items from database
   useEffect(() => {
     fetchItems();
@@ -43,8 +54,10 @@ export default function WardrobePage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      // Using demo user for now - you can add user authentication later
-      const response = await fetch('/api/wardrobe/items?userId=demo@example.com');
+      const userId = getUserId();
+      if (!userId) return;
+      
+      const response = await fetch(`/api/wardrobe/items?userId=${userId}`);
       const data = await response.json();
       setItems(data.items || []);
     } catch (error) {
@@ -64,12 +77,15 @@ export default function WardrobePage() {
 
     setUploading(true);
     try {
+      const userId = getUserId();
+      if (!userId) throw new Error('No user ID');
+
       // Get or create default wardrobe
       const wardrobeResponse = await fetch('/api/wardrobe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 'demo@example.com',
+          userId,
           name: 'My Wardrobe',
         }),
       });
@@ -81,7 +97,7 @@ export default function WardrobePage() {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('wardrobeId', wardrobeId);
-        formData.append('userId', 'demo@example.com');
+        formData.append('userId', userId);
         formData.append('name', file.name.replace(/\.[^/.]+$/, ''));
         formData.append('category', 'Topwear'); // Default category
 

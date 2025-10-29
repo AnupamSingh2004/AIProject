@@ -3,12 +3,16 @@
 import { useState, useRef } from 'react';
 import { Upload, Camera, AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function AnalyzePage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,8 +52,59 @@ export default function AnalyzePage() {
   const clearImage = () => {
     setSelectedImage(null);
     setAnalysisResult(null);
+    setSaveMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveToProfile = async () => {
+    if (!analysisResult) return;
+
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      // Get or create userId - use a proper UUID format
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        // Generate a valid UUID v4
+        userId = crypto.randomUUID();
+        localStorage.setItem('userId', userId);
+      }
+
+      const response = await fetch('/api/skin-tone/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          skinType: analysisResult.skinType,
+          undertone: analysisResult.undertone,
+          dominantColor: analysisResult.dominantColor,
+          confidence: analysisResult.confidence,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('API Error:', data);
+        throw new Error(data.error || 'Failed to save skin tone analysis');
+      }
+
+      setSaveMessage('✓ Saved to your profile successfully!');
+      
+      // Redirect to recommendations after 2 seconds
+      setTimeout(() => {
+        router.push('/recommendations');
+      }, 2000);
+    } catch (error) {
+      console.error('Error saving skin tone analysis:', error);
+      setSaveMessage(`✗ Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -239,12 +294,33 @@ export default function AnalyzePage() {
 
                 {/* Action Buttons */}
                 <div className="pt-6 space-y-4">
-                  <button className="btn btn-primary btn-lg w-full">
+                  <button 
+                    onClick={() => router.push('/recommendations')}
+                    className="btn btn-primary btn-lg w-full"
+                  >
                     View Recommended Outfits
                   </button>
-                  <button className="btn btn-secondary btn-lg w-full">
-                    Save to Profile
+                  <button 
+                    onClick={handleSaveToProfile}
+                    disabled={saving}
+                    className="btn btn-secondary btn-lg w-full flex items-center justify-center gap-2"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save to Profile'
+                    )}
                   </button>
+                  {saveMessage && (
+                    <p className={`text-center text-sm ${
+                      saveMessage.startsWith('✓') ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {saveMessage}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

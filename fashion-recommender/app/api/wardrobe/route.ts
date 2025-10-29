@@ -19,13 +19,14 @@ export async function POST(request: NextRequest) {
 
     // Check if user exists, create if not
     let user = await prisma.user.findUnique({
-      where: { email: userId },
+      where: { id: userId },
     })
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: userId,
+          id: userId,
+          email: `user-${userId}@styleai.demo`,
           name: 'Demo User',
         },
       })
@@ -69,9 +70,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
-    // Find user by email
+    // Find user by ID
     const user = await prisma.user.findUnique({
-      where: { email: userId },
+      where: { id: userId },
     })
 
     if (!user) {

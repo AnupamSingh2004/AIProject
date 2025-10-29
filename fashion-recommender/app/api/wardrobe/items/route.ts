@@ -10,27 +10,31 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('image') as File
     const wardrobeId = formData.get('wardrobeId') as string
-    const userEmail = formData.get('userId') as string
+    const userId = formData.get('userId') as string
     const name = formData.get('name') as string
     const category = formData.get('category') as string
 
-    if (!file || !wardrobeId || !userEmail || !name || !category) {
+    if (!file || !wardrobeId || !userId || !name || !category) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email: userEmail },
+    // Find or create user
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
     })
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+      console.log('User not found, creating new user')
+      user = await prisma.user.create({
+        data: {
+          id: userId,
+          email: `user-${userId}@styleai.demo`,
+          name: 'Demo User',
+        },
+      })
     }
 
     // Convert image to buffer
@@ -125,9 +129,9 @@ export async function GET(request: NextRequest) {
     if (wardrobeId) {
       where.wardrobeId = wardrobeId
     } else if (userId) {
-      // Find user by email and get their items
+      // Find user by ID and get their items
       const user = await prisma.user.findUnique({
-        where: { email: userId },
+        where: { id: userId },
       })
       
       if (user) {

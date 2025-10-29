@@ -20,6 +20,7 @@ import sys
 import cv2
 import json
 import os
+from sklearn.cluster import KMeans
 
 # Configure TensorFlow for GPU
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Reduce TF logging
@@ -149,13 +150,14 @@ class ClothingAnalysisResponse(BaseModel):
     confidence: float
 
 class OutfitRecommendationRequest(BaseModel):
-    skin_tone_hex: Optional[str] = None
-    occasion: str
-    season: Optional[str] = "spring"
-    wardrobe_items: List[str]  # List of item IDs from database
+    skinTone: Optional[Dict] = None
+    clothingItems: List[Dict]  # List of clothing items with their properties
+    occasion: Optional[str] = "Casual"
+    season: Optional[str] = None
+    count: Optional[int] = 10
 
 class OutfitRecommendationResponse(BaseModel):
-    outfits: List[Dict]
+    outfits: List[List[str]]  # List of outfit item ID arrays
     scores: List[float]
 
 # Startup event
@@ -275,7 +277,6 @@ async def analyze_clothing(file: UploadFile = File(...)):
         pixels = img_np.reshape(-1, 3)
         
         # K-means clustering for dominant colors
-        from sklearn.cluster import KMeans
         kmeans = KMeans(n_clusters=min(4, len(pixels)), random_state=42, n_init=10)
         kmeans.fit(pixels)
         
@@ -349,21 +350,117 @@ async def analyze_clothing(file: UploadFile = File(...)):
 async def recommend_outfits(request: OutfitRecommendationRequest):
     """Generate outfit recommendations based on wardrobe items."""
     try:
-        # This endpoint would integrate with the database to fetch actual wardrobe items
-        # For now, return a basic response
+        if outfit_compatibility_model is None:
+            raise HTTPException(status_code=503, detail="Outfit compatibility model not available")
         
-        if recommendation_engine is None:
-            raise HTTPException(status_code=503, detail="Recommendation engine not available")
+        clothing_items = request.clothingItems
         
-        # TODO: Integrate with database to fetch actual wardrobe items
-        # For now, return placeholder
+        if not clothing_items or len(clothing_items) < 2:
+            return OutfitRecommendationResponse(outfits=[], scores=[])
+        
+        # Separate items by category
+        tops = [item for item in clothing_items if item.get('category', '').lower() in ['topwear', 'top', 'shirt', 'blouse', 't-shirt', 'tops']]
+        bottoms = [item for item in clothing_items if item.get('category', '').lower() in ['bottomwear', 'bottom', 'pants', 'jeans', 'skirt', 'shorts', 'bottoms']]
+        dresses = [item for item in clothing_items if item.get('category', '').lower() == 'dress']
+        shoes = [item for item in clothing_items if item.get('category', '').lower() in ['footwear', 'shoes', 'sneakers', 'boots', 'sandals']]
+        
+        outfits = []
+        scores = []
+        
+        # Generate outfit combinations
+        # Type 1: Top + Bottom + Shoes
+        for top in tops:
+            for bottom in bottoms:
+                for shoe in shoes if shoes else [None]:
+                    try:
+                        # Create feature vectors for compatibility model
+                        # Model expects 3 inputs of shape (None, 224, 224, 3)
+                        # Since we don't have actual images, create feature vectors based on colors
+                        top_features = np.zeros((1, 224, 224, 3))
+                        bottom_features = np.zeros((1, 224, 224, 3))
+                        shoe_features = np.zeros((1, 224, 224, 3))
+                        
+                        # Fill with dominant colors
+                        if 'dominant_color' in top and top['dominant_color']:
+                            top_features[:, :, :, 0] = top['dominant_color'].get('r', 128) / 255.0
+                            top_features[:, :, :, 1] = top['dominant_color'].get('g', 128) / 255.0
+                            top_features[:, :, :, 2] = top['dominant_color'].get('b', 128) / 255.0
+                        
+                        if 'dominant_color' in bottom and bottom['dominant_color']:
+                            bottom_features[:, :, :, 0] = bottom['dominant_color'].get('r', 128) / 255.0
+                            bottom_features[:, :, :, 1] = bottom['dominant_color'].get('g', 128) / 255.0
+                            bottom_features[:, :, :, 2] = bottom['dominant_color'].get('b', 128) / 255.0
+                        
+                        if shoe and 'dominant_color' in shoe and shoe['dominant_color']:
+                            shoe_features[:, :, :, 0] = shoe['dominant_color'].get('r', 128) / 255.0
+                            shoe_features[:, :, :, 1] = shoe['dominant_color'].get('g', 128) / 255.0
+                            shoe_features[:, :, :, 2] = shoe['dominant_color'].get('b', 128) / 255.0
+                        
+                        # Predict compatibility
+                        score = outfit_compatibility_model.predict(
+                            [top_features, bottom_features, shoe_features],
+                            verbose=0
+                        )[0][0]
+                        
+                        outfit_items = [top['id'], bottom['id']]
+                        if shoe:
+                            outfit_items.append(shoe['id'])
+                        
+                        outfits.append(outfit_items)
+                        scores.append(float(score))
+                    except Exception as e:
+                        print(f"Error scoring outfit: {e}")
+                        continue
+        
+        # Type 2: Dress + Shoes
+        for dress in dresses:
+            for shoe in shoes if shoes else [None]:
+                try:
+                    dress_features = np.zeros((1, 224, 224, 3))
+                    shoe_features = np.zeros((1, 224, 224, 3))
+                    neutral_features = np.ones((1, 224, 224, 3)) * 0.5  # Neutral placeholder
+                    
+                    if 'dominant_color' in dress and dress['dominant_color']:
+                        dress_features[:, :, :, 0] = dress['dominant_color'].get('r', 128) / 255.0
+                        dress_features[:, :, :, 1] = dress['dominant_color'].get('g', 128) / 255.0
+                        dress_features[:, :, :, 2] = dress['dominant_color'].get('b', 128) / 255.0
+                    
+                    if shoe and 'dominant_color' in shoe and shoe['dominant_color']:
+                        shoe_features[:, :, :, 0] = shoe['dominant_color'].get('r', 128) / 255.0
+                        shoe_features[:, :, :, 1] = shoe['dominant_color'].get('g', 128) / 255.0
+                        shoe_features[:, :, :, 2] = shoe['dominant_color'].get('b', 128) / 255.0
+                    
+                    score = outfit_compatibility_model.predict(
+                        [dress_features, neutral_features, shoe_features],
+                        verbose=0
+                    )[0][0]
+                    
+                    outfit_items = [dress['id']]
+                    if shoe:
+                        outfit_items.append(shoe['id'])
+                    
+                    outfits.append(outfit_items)
+                    scores.append(float(score))
+                except Exception as e:
+                    print(f"Error scoring dress outfit: {e}")
+                    continue
+        
+        # Sort by score and return top N
+        if outfits and scores:
+            sorted_indices = np.argsort(scores)[::-1][:request.count]
+            outfits = [outfits[i] for i in sorted_indices]
+            scores = [scores[i] for i in sorted_indices]
         
         return OutfitRecommendationResponse(
-            outfits=[],
-            scores=[]
+            outfits=outfits,
+            scores=scores
         )
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error in outfit recommendation: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Recommendation failed: {str(e)}")
 
 @app.get("/health")
